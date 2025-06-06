@@ -59,7 +59,7 @@ class SystemBootstrapService:
                 username="admin",
                 password=self.hasher.hash_password("admin123"),
                 is_admin=True,
-                is_active=True
+                is_active=True,
             )
 
             created_admin = self.user_repo.create(default_admin)  # This resets cache

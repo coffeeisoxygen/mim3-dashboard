@@ -7,16 +7,21 @@ import streamlit as st
 
 from sales_dashboard.services.system_bootstrap_service import SystemBootstrapService
 from sales_dashboard.services.health_service import HealthCheckService
-from sales_dashboard.infrastructure.repositories.user_repository import SQLUserRepository
+from sales_dashboard.infrastructure.repositories.user_repository import (
+    SQLUserRepository,
+)
 from sales_dashboard.infrastructure.db_engine import create_all_tables
+
 
 @dataclass
 class AppState:
     """Application state container"""
+
     initialized: bool = False
     database_ready: bool = False
     admin_ready: bool = False
     error_message: str | None = None
+
 
 @st.cache_resource
 def initialize_application() -> Dict[str, Any]:
@@ -34,7 +39,7 @@ def initialize_application() -> Dict[str, Any]:
         if health_status["status"] != "healthy":
             return {
                 "success": False,
-                "error": f"Database health check failed: {health_status['message']}"
+                "error": f"Database health check failed: {health_status['message']}",
             }
 
         # Bootstrap admin
@@ -43,24 +48,19 @@ def initialize_application() -> Dict[str, Any]:
         default_admin = bootstrap_service.ensure_default_admin()
 
         if not default_admin:
-            return {
-                "success": False,
-                "error": "Failed to ensure default admin exists"
-            }
+            return {"success": False, "error": "Failed to ensure default admin exists"}
 
         logger.info("Application initialization completed successfully")
         return {
             "success": True,
             "admin_id": default_admin.id,
-            "message": "Application ready"
+            "message": "Application ready",
         }
 
     except Exception as e:
         logger.error(f"Application initialization failed: {e}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
+
 
 def ensure_app_ready() -> bool:
     """Ensure application is ready - call this at start of every page"""

@@ -6,7 +6,10 @@ import streamlit as st
 
 from sales_dashboard.domain.models.user import User
 from sales_dashboard.domain.schemas.user import UserCreateByAdmin
-from sales_dashboard.services.interfaces import BootstrapServiceInterface, UserServiceInterface
+from sales_dashboard.services.interfaces import (
+    BootstrapServiceInterface,
+    UserServiceInterface,
+)
 
 
 class BootstrapService(BootstrapServiceInterface):
@@ -42,7 +45,9 @@ class BootstrapService(BootstrapServiceInterface):
                     return admins[0]
                 break  # No admins found, proceed to creation
             except Exception as e:
-                logger.warning(f"Error checking existing admins (attempt {attempt + 1}): {e}")
+                logger.warning(
+                    f"Error checking existing admins (attempt {attempt + 1}): {e}"
+                )
                 if attempt == self._max_retry_attempts - 1:
                     raise  # Re-raise on final attempt
 
@@ -61,7 +66,7 @@ class BootstrapService(BootstrapServiceInterface):
                     email="admin@dashboard.com",
                     username="admin",
                     password="admin123",
-                    is_admin=True
+                    is_admin=True,
                 )
 
                 # Create a temporary admin user for the creation process
@@ -73,10 +78,12 @@ class BootstrapService(BootstrapServiceInterface):
                     username="bootstrap",
                     password="",
                     is_admin=True,
-                    is_active=True
+                    is_active=True,
                 )
 
-                created_admin = self.user_service.create_user_by_admin(admin_data, temp_admin)
+                created_admin = self.user_service.create_user_by_admin(
+                    admin_data, temp_admin
+                )
                 st.session_state.bootstrap_completed = True
                 logger.info(f"Default admin created with ID: {created_admin.id}")
                 return created_admin
@@ -98,7 +105,9 @@ class BootstrapService(BootstrapServiceInterface):
                 logger.warning(f"Bootstrap attempt {attempt + 1} failed: {e}")
 
             except Exception as e:
-                logger.error(f"Failed to create default admin (attempt {attempt + 1}): {e}")
+                logger.error(
+                    f"Failed to create default admin (attempt {attempt + 1}): {e}"
+                )
 
                 # Try to get existing admin one more time (race condition protection)
                 try:
@@ -128,11 +137,7 @@ class BootstrapService(BootstrapServiceInterface):
                 "completed": st.session_state.get("bootstrap_completed", False),
                 "admins_count": len(admins),
                 "session_state_keys": list(st.session_state.keys()),
-                "status": "healthy" if admins else "no_admins"
+                "status": "healthy" if admins else "no_admins",
             }
         except Exception as e:
-            return {
-                "completed": False,
-                "error": str(e),
-                "status": "error"
-            }
+            return {"completed": False, "error": str(e), "status": "error"}

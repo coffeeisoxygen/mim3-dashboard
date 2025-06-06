@@ -8,6 +8,7 @@ from sales_dashboard.domain.schemas.user import UserCreate, UserCreateByAdmin, U
 from sales_dashboard.domain.repository.user_repository import UserRepository
 from sales_dashboard.utils.hasher import get_password_hasher
 
+
 class AuthService:
     """Authentication and user management service"""
 
@@ -48,12 +49,14 @@ class AuthService:
             username=user_data.username,
             password=self.hasher.hash_password(user_data.password),
             is_admin=False,
-            is_active=True
+            is_active=True,
         )
 
         return self.user_repo.create(user)
 
-    def create_user_by_admin(self, user_data: UserCreateByAdmin, admin_user: User) -> User:
+    def create_user_by_admin(
+        self, user_data: UserCreateByAdmin, admin_user: User
+    ) -> User:
         """Create user with admin privileges (admin only)"""
         if not admin_user.is_admin:
             raise PermissionError("Only admin can create users with privileges")
@@ -72,7 +75,7 @@ class AuthService:
             username=user_data.username,
             password=self.hasher.hash_password(user_data.password),
             is_admin=user_data.is_admin,
-            is_active=True
+            is_active=True,
         )
 
         return self.user_repo.create(user)

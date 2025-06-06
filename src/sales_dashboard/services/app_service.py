@@ -11,15 +11,20 @@ from sales_dashboard.services.core.user_service import UserService
 from sales_dashboard.services.system.bootsrap_service import BootstrapService
 from sales_dashboard.services.system.health_service import HealthService
 from sales_dashboard.services.system.metadata_service import MetadataService
-from sales_dashboard.infrastructure.repositories.user_repository import SQLUserRepository
+from sales_dashboard.infrastructure.repositories.user_repository import (
+    SQLUserRepository,
+)
 from sales_dashboard.infrastructure.db_engine import create_all_tables
+
 
 @dataclass
 class AppConfiguration:
     """Application configuration"""
+
     debug_mode: bool = True
     auto_create_admin: bool = True
     cache_enabled: bool = True
+
 
 class ApplicationService:
     """Main application service - orchestrates all other services"""
@@ -52,7 +57,7 @@ class ApplicationService:
             if health_status["status"] != "healthy":
                 return {
                     "success": False,
-                    "error": f"Database health check failed: {health_status['message']}"
+                    "error": f"Database health check failed: {health_status['message']}",
                 }
 
             # Bootstrap if enabled
@@ -61,21 +66,15 @@ class ApplicationService:
                 if not default_admin:
                     return {
                         "success": False,
-                        "error": "Failed to ensure default admin exists"
+                        "error": "Failed to ensure default admin exists",
                     }
 
             logger.info("Application initialization completed successfully")
-            return {
-                "success": True,
-                "message": "Application ready"
-            }
+            return {"success": True, "message": "Application ready"}
 
         except Exception as e:
             logger.error(f"Application initialization failed: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     def ensure_ready(self) -> bool:
         """Ensure application is ready"""
@@ -92,6 +91,7 @@ class ApplicationService:
         st.session_state.app_verified = True
         logger.debug("Application readiness verified")
         return True
+
 
 # Global application service instance
 @st.cache_resource

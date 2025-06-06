@@ -10,6 +10,7 @@ from sales_dashboard.domain.repository.user_repository import UserRepository
 from sales_dashboard.utils.hasher import get_password_hasher
 from sales_dashboard.services.interfaces import AuthServiceInterface
 
+
 class AuthService(AuthServiceInterface):
     """Pure authentication service - single responsibility"""
 

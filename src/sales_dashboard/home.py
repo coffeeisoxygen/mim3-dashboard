@@ -29,7 +29,9 @@ with st.sidebar:
 
 # Pages configuration
 auth_page = st.Page("ui/login.py", title="Authentication", icon=":material/login:")
-dashboard = st.Page("ui/dashboard.py", title="Dashboard", icon=":material/dashboard:", default=True)
+dashboard = st.Page(
+    "ui/dashboard.py", title="Dashboard", icon=":material/dashboard:", default=True
+)
 
 # Navigation based on login status
 if st.session_state.logged_in:
@@ -37,16 +39,22 @@ if st.session_state.logged_in:
 
     if user and user.is_admin:
         logger.debug(f"Admin user {user.username} - showing full navigation")
-        pg = st.navigation({
-            "Dashboard": [dashboard],
-            "Admin": [auth_page],
-        })
+        pg = st.navigation(
+            {
+                "Dashboard": [dashboard],
+                "Admin": [auth_page],
+            }
+        )
     else:
-        logger.debug(f"Regular user {user.username if user else 'Unknown'} - showing limited navigation")
-        pg = st.navigation({
-            "Dashboard": [dashboard],
-            "Account": [auth_page],
-        })
+        logger.debug(
+            f"Regular user {user.username if user else 'Unknown'} - showing limited navigation"
+        )
+        pg = st.navigation(
+            {
+                "Dashboard": [dashboard],
+                "Account": [auth_page],
+            }
+        )
 else:
     logger.debug("User not logged in - showing login page only")
     pg = st.navigation([auth_page])

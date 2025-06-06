@@ -2,6 +2,7 @@
 import streamlit as st
 from sales_dashboard.services.health_service import HealthCheckService
 
+
 def show_health_dashboard():
     """Admin health monitoring dashboard"""
     if not st.session_state.get("user", {}).get("is_admin", False):

@@ -24,14 +24,14 @@ class HealthService(HealthServiceInterface):
                     "status": "healthy",
                     "database": "sqlite",
                     "version": version,
-                    "message": "Database connection successful"
+                    "message": "Database connection successful",
                 }
         except Exception as e:
             logger.error(f"Database health check failed: {e}")
             return {
                 "status": "unhealthy",
                 "error": str(e),
-                "message": "Database connection failed"
+                "message": "Database connection failed",
             }
 
     def check_application_health(self) -> Dict[str, Any]:
@@ -50,30 +50,32 @@ class HealthService(HealthServiceInterface):
         return {
             "status": overall_status,
             "timestamp": datetime.now().isoformat(),
-            "checks": checks
+            "checks": checks,
         }
 
     def _check_memory_usage(self) -> Dict[str, Any]:
         """Check memory usage"""
         try:
             import psutil
+
             memory = psutil.virtual_memory()
 
             return {
                 "status": "healthy" if memory.percent < 80 else "warning",
                 "usage_percent": memory.percent,
-                "available_gb": round(memory.available / (1024**3), 2)
+                "available_gb": round(memory.available / (1024**3), 2),
             }
         except ImportError:
             return {
                 "status": "unknown",
-                "message": "psutil not available for memory monitoring"
+                "message": "psutil not available for memory monitoring",
             }
 
     def _check_disk_space(self) -> Dict[str, Any]:
         """Check disk space"""
         try:
             import shutil
+
             usage = shutil.disk_usage(".")
 
             free_percent = (usage.free / usage.total) * 100
@@ -81,10 +83,7 @@ class HealthService(HealthServiceInterface):
             return {
                 "status": "healthy" if free_percent > 10 else "warning",
                 "free_percent": round(free_percent, 2),
-                "free_gb": round(usage.free / (1024**3), 2)
+                "free_gb": round(usage.free / (1024**3), 2),
             }
         except Exception as e:
-            return {
-                "status": "unknown",
-                "message": f"Disk check failed: {e}"
-            }
+            return {"status": "unknown", "message": f"Disk check failed: {e}"}

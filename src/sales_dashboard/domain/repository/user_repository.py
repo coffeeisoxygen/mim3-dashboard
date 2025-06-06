@@ -2,6 +2,7 @@ from typing import Optional, List
 from abc import ABC, abstractmethod
 from sales_dashboard.domain.models.user import User
 
+
 class UserRepository(ABC):
     """Abstract user repository interface"""
 

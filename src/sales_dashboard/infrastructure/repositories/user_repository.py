@@ -8,12 +8,13 @@ from sales_dashboard.domain.repository.user_repository import UserRepository
 from sales_dashboard.infrastructure.db_engine import (
     get_streamlit_connection,
     reset_connection_cache,
-    get_connection_session
+    get_connection_session,
 )
 from sales_dashboard.infrastructure.db_entities import UserEntity
 
 if TYPE_CHECKING:
     import pandas as pd
+
 
 class SQLUserRepository(UserRepository):
     """SQLAlchemy implementation with proper cache management"""
@@ -24,7 +25,7 @@ class SQLUserRepository(UserRepository):
         result = conn.query(
             "SELECT * FROM users WHERE username = :username AND is_active = 1",
             params={"username": username},
-            ttl=0  # ✅ Always fresh for authentication
+            ttl=0,  # ✅ Always fresh for authentication
         )
 
         if result.empty:
@@ -39,7 +40,7 @@ class SQLUserRepository(UserRepository):
         result = conn.query(
             "SELECT * FROM users WHERE email = :email AND is_active = 1",
             params={"email": email},
-            ttl=0  # ✅ Always fresh for authentication
+            ttl=0,  # ✅ Always fresh for authentication
         )
 
         if result.empty:
@@ -54,7 +55,7 @@ class SQLUserRepository(UserRepository):
         result = conn.query(
             "SELECT * FROM users WHERE id = :user_id AND is_active = 1",
             params={"user_id": user_id},
-            ttl=300  # 5 minutes cache for non-critical data
+            ttl=300,  # 5 minutes cache for non-critical data
         )
 
         if result.empty:
@@ -136,7 +137,7 @@ class SQLUserRepository(UserRepository):
         conn = get_streamlit_connection()
         result = conn.query(
             "SELECT * FROM users WHERE is_active = 1 ORDER BY created DESC",
-            ttl=60  # 1 minute cache for list views
+            ttl=60,  # 1 minute cache for list views
         )
 
         if result.empty:
@@ -149,7 +150,7 @@ class SQLUserRepository(UserRepository):
         conn = get_streamlit_connection()
         result = conn.query(
             "SELECT * FROM users WHERE is_admin = 1 AND is_active = 1 ORDER BY created DESC",
-            ttl=0  # ✅ Always fresh for critical bootstrap logic
+            ttl=0,  # ✅ Always fresh for critical bootstrap logic
         )
 
         if result.empty:

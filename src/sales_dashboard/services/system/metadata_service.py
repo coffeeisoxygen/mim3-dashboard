@@ -31,7 +31,7 @@ class AppMetadata:
             "python_version": self.python_version,
             "streamlit_version": st.__version__,
             "build_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "environment": "development" if "dev" in self.version else "production"
+            "environment": "development" if "dev" in self.version else "production",
         }
 
 
@@ -71,5 +71,5 @@ class MetadataService:
             st.write(f"📧 Contact: {metadata.contact_email}")
             st.write(f"🔗 Repository: {metadata.repository}")
 
-            if build_info['environment'] == 'development':
+            if build_info["environment"] == "development":
                 st.warning("🚧 Development Mode")

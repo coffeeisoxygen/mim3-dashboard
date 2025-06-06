@@ -8,9 +8,11 @@ import time
 from dataclasses import dataclass
 import streamlit as st
 
+
 @dataclass
 class SystemMetrics:
     """System metrics for dashboard display"""
+
     cpu_percent: float
     memory_percent: float
     disk_free_gb: float
@@ -18,6 +20,7 @@ class SystemMetrics:
     python_version: str
     platform: str
     uptime_hours: float
+
 
 class EnvironmentService:
     """Environment monitoring for modern dashboard UI"""
@@ -49,7 +52,7 @@ class EnvironmentService:
                 disk_total_gb=round(disk_total_gb, 2),
                 python_version=platform.python_version(),
                 platform=platform.platform(),
-                uptime_hours=round(uptime_hours, 2)
+                uptime_hours=round(uptime_hours, 2),
             )
         except ImportError:
             # Fallback without psutil
@@ -60,7 +63,7 @@ class EnvironmentService:
                 disk_total_gb=0.0,
                 python_version=platform.python_version(),
                 platform=platform.platform(),
-                uptime_hours=0.0
+                uptime_hours=0.0,
             )
 
     def show_system_status(self) -> None:
@@ -77,7 +80,7 @@ class EnvironmentService:
                 "CPU Usage",
                 f"{metrics.cpu_percent:.1f}%",
                 delta=None,
-                delta_color="inverse"
+                delta_color="inverse",
             )
 
         with col2:
@@ -85,22 +88,18 @@ class EnvironmentService:
                 "Memory Usage",
                 f"{metrics.memory_percent:.1f}%",
                 delta=None,
-                delta_color="inverse"
+                delta_color="inverse",
             )
 
         with col3:
             st.metric(
                 "Disk Free",
                 f"{metrics.disk_free_gb:.1f} GB",
-                delta=f"of {metrics.disk_total_gb:.1f} GB"
+                delta=f"of {metrics.disk_total_gb:.1f} GB",
             )
 
         with col4:
-            st.metric(
-                "Uptime",
-                f"{metrics.uptime_hours:.1f}h",
-                delta=None
-            )
+            st.metric("Uptime", f"{metrics.uptime_hours:.1f}h", delta=None)
 
         # Progress bars for visual appeal
         st.progress(metrics.cpu_percent / 100, text="CPU")

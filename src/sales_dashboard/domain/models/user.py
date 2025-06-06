@@ -43,6 +43,7 @@ class User:
 
 class UserCreate(BaseModel):
     """Schema for creating new user (by admin)"""
+
     nama: str = Field(..., max_length=100)
     email: EmailStr
     username: str = Field(..., min_length=3, max_length=50)
@@ -52,12 +53,14 @@ class UserCreate(BaseModel):
 
 class UserLogin(BaseModel):
     """Schema for user login"""
+
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=6)
 
 
 class UserUpdate(BaseModel):
     """Schema for updating user info"""
+
     nama: Optional[str] = Field(None, max_length=100)
     email: Optional[EmailStr] = None
     password: Optional[str] = Field(None, min_length=6)
@@ -65,12 +68,14 @@ class UserUpdate(BaseModel):
 
 class UserStatusUpdate(BaseModel):
     """Schema for admin operations"""
+
     is_active: Optional[bool] = None
     is_admin: Optional[bool] = None
 
 
 class UserOut(BaseModel):
     """Schema for user output"""
+
     id: int
     nama: str
     email: EmailStr

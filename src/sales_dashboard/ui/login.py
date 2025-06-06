@@ -6,26 +6,30 @@ from pydantic import ValidationError
 
 from sales_dashboard.domain.schemas.user import UserLogin
 from sales_dashboard.services.auth_service import AuthService
-from sales_dashboard.infrastructure.repositories.user_repository import SQLUserRepository
+from sales_dashboard.infrastructure.repositories.user_repository import (
+    SQLUserRepository,
+)
 
 
-def _handle_validation_errors(validation_error: ValidationError, username: str) -> list[str]:
+def _handle_validation_errors(
+    validation_error: ValidationError, username: str
+) -> list[str]:
     """Process Pydantic validation errors and return formatted error messages."""
     error_messages = []
 
     for error in validation_error.errors():
         # Safely extract field name - convert to string to avoid type issues
-        field_raw = error['loc'][0] if error['loc'] else 'input'
+        field_raw = error["loc"][0] if error["loc"] else "input"
         field_name = str(field_raw).title()
 
-        error_message = error.get('msg', 'Invalid input')
+        error_message = error.get("msg", "Invalid input")
 
         # Translate common validation messages to Indonesian
-        if 'at least' in error_message and 'characters' in error_message:
-            min_length = error.get('ctx', {}).get('min_length', 6)
+        if "at least" in error_message and "characters" in error_message:
+            min_length = error.get("ctx", {}).get("min_length", 6)
             error_message = f"minimal {min_length} karakter"
-        elif 'at most' in error_message and 'characters' in error_message:
-            max_length = error.get('ctx', {}).get('max_length', 50)
+        elif "at most" in error_message and "characters" in error_message:
+            max_length = error.get("ctx", {}).get("max_length", 50)
             error_message = f"maksimal {max_length} karakter"
 
         error_messages.append(f"**{field_name}**: {error_message}")

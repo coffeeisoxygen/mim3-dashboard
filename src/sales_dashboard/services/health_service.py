@@ -6,6 +6,7 @@ from sqlalchemy import text
 
 from sales_dashboard.infrastructure.db_engine import get_db_session
 
+
 class HealthCheckService:
     """Application health check service"""
 
@@ -21,7 +22,7 @@ class HealthCheckService:
                 "status": "healthy",
                 "database": "connected",
                 "sqlite_version": result,
-                "message": "Database connection successful"
+                "message": "Database connection successful",
             }
 
         except Exception as e:
@@ -29,7 +30,7 @@ class HealthCheckService:
             return {
                 "status": "unhealthy",
                 "database": "disconnected",
-                "message": f"Database error: {str(e)}"
+                "message": f"Database error: {str(e)}",
             }
 
     def check_application_health(self) -> Dict[str, Any]:
@@ -44,5 +45,5 @@ class HealthCheckService:
                 # "file_system": self.check_file_system(),
                 # "external_api": self.check_external_api(),
             },
-            "timestamp": "2025-01-07T10:00:00Z"  # Use actual timestamp
+            "timestamp": "2025-01-07T10:00:00Z",  # Use actual timestamp
         }
