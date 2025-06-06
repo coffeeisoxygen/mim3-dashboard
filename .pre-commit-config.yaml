@@ -71,7 +71,7 @@ repos:
   # 3. RUFF (Python Formatting & Linting)
   # ========================================
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.11.12"
+    rev: "v0.11.13"
     hooks:
       # Format first, then lint
       - id: ruff-format
@@ -87,7 +87,7 @@ repos:
   # 4. UV (Dependency Management)
   # ========================================
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.7.10
+    rev: 0.7.11
     hooks:
       # Update lockfile when deps change
       - id: uv-lock
