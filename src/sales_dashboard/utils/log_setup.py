@@ -1,12 +1,12 @@
 # log_setup.py
 from __future__ import annotations
 
-import os
+from pathlib import Path
 import sys
 from typing import TYPE_CHECKING
 
-import streamlit as st
 from loguru import logger
+import streamlit as st
 
 if TYPE_CHECKING:
     pass
@@ -36,7 +36,7 @@ def setup_logging(debug: bool = True) -> None:
         logger.info("Debug logging enabled (console output)")
     else:
         # Ensure logs directory exists
-        os.makedirs("logs", exist_ok=True)
+        Path("logs").mkdir(parents=True, exist_ok=True)
         logger.add(
             "logs/sdp_dashboard.log",
             rotation="1 MB",

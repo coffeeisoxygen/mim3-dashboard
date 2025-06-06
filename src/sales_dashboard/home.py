@@ -1,13 +1,13 @@
-"""Main application entry point with modern Python features"""
+"""Main application entry point with modern Python features."""
 
 from __future__ import annotations
 
-import streamlit as st
 from loguru import logger
+import streamlit as st
 
-from sales_dashboard.utils.log_setup import setup_logging
 from sales_dashboard.services.app_initialization_service import ensure_app_ready
 from sales_dashboard.services.app_metadata_service import show_app_info
+from sales_dashboard.utils.log_setup import setup_logging
 
 # Setup logging once
 setup_logging(debug=True)

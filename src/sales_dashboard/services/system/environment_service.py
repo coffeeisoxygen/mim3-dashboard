@@ -1,11 +1,12 @@
 # services/system/environment_service.py
 from __future__ import annotations
 
-import os
-import shutil
-import platform
-import time
 from dataclasses import dataclass
+import os
+import platform
+import shutil
+import time
+
 import streamlit as st
 
 
@@ -26,7 +27,7 @@ class EnvironmentService:
     """Environment monitoring for modern dashboard UI"""
 
     @st.cache_data(ttl=30)  # Refresh every 30 seconds
-    def get_system_metrics(_self) -> SystemMetrics:
+    def get_system_metrics(self) -> SystemMetrics:
         """Get current system metrics - cached for performance"""
         try:
             import psutil

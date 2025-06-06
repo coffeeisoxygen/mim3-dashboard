@@ -1,14 +1,13 @@
 # services/core/auth_service.py - Pure authentication
 from __future__ import annotations
 
-from typing import Optional
 from loguru import logger
 
 from sales_dashboard.domain.models.user import User
-from sales_dashboard.domain.schemas.user import UserLogin
 from sales_dashboard.domain.repository.user_repository import UserRepository
-from sales_dashboard.utils.hasher import get_password_hasher
+from sales_dashboard.domain.schemas.user import UserLogin
 from sales_dashboard.services.interfaces import AuthServiceInterface
+from sales_dashboard.utils.hasher import get_password_hasher
 
 
 class AuthService(AuthServiceInterface):
@@ -18,7 +17,7 @@ class AuthService(AuthServiceInterface):
         self.user_repo = user_repo
         self.hasher = get_password_hasher(use_bcrypt=False)
 
-    def authenticate(self, login_data: UserLogin) -> Optional[User]:
+    def authenticate(self, login_data: UserLogin) -> User | None:
         """Authenticate user login"""
         logger.debug(f"Authenticating user: {login_data.username}")
 

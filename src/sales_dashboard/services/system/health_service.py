@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from typing import Dict, Any
 from datetime import datetime
+from typing import Any
+
 from loguru import logger
 from sqlalchemy import text
 
@@ -12,7 +13,7 @@ from sales_dashboard.services.interfaces import HealthServiceInterface
 class HealthService(HealthServiceInterface):
     """Health check service"""
 
-    def check_database_health(self) -> Dict[str, Any]:
+    def check_database_health(self) -> dict[str, Any]:
         """Check database connectivity and basic operations"""
         try:
             with get_db_session() as session:
@@ -34,7 +35,7 @@ class HealthService(HealthServiceInterface):
                 "message": "Database connection failed",
             }
 
-    def check_application_health(self) -> Dict[str, Any]:
+    def check_application_health(self) -> dict[str, Any]:
         """Check overall application health"""
         checks = {
             "database": self.check_database_health(),
@@ -53,7 +54,7 @@ class HealthService(HealthServiceInterface):
             "checks": checks,
         }
 
-    def _check_memory_usage(self) -> Dict[str, Any]:
+    def _check_memory_usage(self) -> dict[str, Any]:
         """Check memory usage"""
         try:
             import psutil
@@ -71,7 +72,7 @@ class HealthService(HealthServiceInterface):
                 "message": "psutil not available for memory monitoring",
             }
 
-    def _check_disk_space(self) -> Dict[str, Any]:
+    def _check_disk_space(self) -> dict[str, Any]:
         """Check disk space"""
         try:
             import shutil

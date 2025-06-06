@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import Dict, Any
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
+
 import streamlit as st
 
 try:
@@ -24,7 +25,7 @@ class AppMetadata:
     license: str = "MIT"
     python_version: str = ">=3.10"
 
-    def get_build_info(self) -> Dict[str, Any]:
+    def get_build_info(self) -> dict[str, Any]:
         """Get build and runtime information"""
         return {
             "version": self.version,
@@ -42,11 +43,11 @@ class MetadataService:
         self.metadata = AppMetadata()
 
     @st.cache_data
-    def get_metadata(_self) -> AppMetadata:
+    def get_metadata(self) -> AppMetadata:
         """Get application metadata - cached"""
-        return _self.metadata
+        return self.metadata
 
-    def get_build_info(self) -> Dict[str, Any]:
+    def get_build_info(self) -> dict[str, Any]:
         """Get build information"""
         return self.metadata.get_build_info()
 
@@ -55,7 +56,7 @@ class MetadataService:
         metadata = self.get_metadata()
         build_info = metadata.get_build_info()
 
-        with st.expander("ℹ️ App Information"):
+        with st.expander("App Information"):
             col1, col2 = st.columns(2)
 
             with col1:

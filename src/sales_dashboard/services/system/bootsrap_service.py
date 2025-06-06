@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Optional, Dict, Any
+from typing import Any
+
 from loguru import logger
 import streamlit as st
 
@@ -19,9 +20,8 @@ class BootstrapService(BootstrapServiceInterface):
         self.user_service = user_service
         self._max_retry_attempts = 3
 
-    def ensure_default_admin(self) -> Optional[User]:
+    def ensure_default_admin(self) -> User | None:
         """Ensure default admin exists with proper cache management"""
-
         # Session state check (fastest)
         if st.session_state.get("bootstrap_completed", False):
             logger.debug("Bootstrap already completed in this session")
@@ -88,21 +88,23 @@ class BootstrapService(BootstrapServiceInterface):
                 logger.info(f"Default admin created with ID: {created_admin.id}")
                 return created_admin
 
-            except ValueError as e:
+            except ValueError as ve:
                 # Username/email already exists - try to get existing
-                if "already exists" in str(e):
+                if "already exists" in str(ve):
                     logger.info("Admin user already exists, attempting to retrieve...")
                     try:
                         admins = self.user_service.get_all_admins()
                         if admins:
                             st.session_state.bootstrap_completed = True
                             return admins[0]
-                    except Exception:
-                        pass
+                    except Exception as retrieval_error:
+                        logger.debug(
+                            f"Could not retrieve existing admin during bootstrap: {retrieval_error}"
+                        )
 
                 if attempt == self._max_retry_attempts - 1:
                     raise
-                logger.warning(f"Bootstrap attempt {attempt + 1} failed: {e}")
+                logger.warning(f"Bootstrap attempt {attempt + 1} failed: {ve}")
 
             except Exception as e:
                 logger.error(
@@ -116,8 +118,10 @@ class BootstrapService(BootstrapServiceInterface):
                         logger.info("Found existing admin after creation attempt")
                         st.session_state.bootstrap_completed = True
                         return admins[0]
-                except Exception:
-                    pass
+                except Exception as creation_error:
+                    logger.debug(
+                        f"Could not retrieve admin after creation attempt: {creation_error}"
+                    )
 
                 if attempt == self._max_retry_attempts - 1:
                     raise
@@ -129,7 +133,7 @@ class BootstrapService(BootstrapServiceInterface):
         st.session_state.bootstrap_completed = False
         logger.info("Bootstrap cache reset")
 
-    def get_bootstrap_status(self) -> Dict[str, Any]:
+    def get_bootstrap_status(self) -> dict[str, Any]:
         """Get current bootstrap status for debugging"""
         try:
             admins = self.user_service.get_all_admins()

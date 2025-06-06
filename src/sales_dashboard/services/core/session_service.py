@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
+from typing import Any
+
 from loguru import logger
 import streamlit as st
 
@@ -14,7 +15,7 @@ class SessionService:
     def __init__(self) -> None:
         self.session_timeout = timedelta(hours=8)  # 8 hours default
 
-    def create_session(self, user: User) -> Dict[str, Any]:
+    def create_session(self, user: User) -> dict[str, Any]:
         """Create user session"""
         session_data = {
             "user": user,
@@ -30,7 +31,7 @@ class SessionService:
         logger.info(f"Session created for user: {user.username}")
         return session_data
 
-    def get_current_user(self) -> Optional[User]:
+    def get_current_user(self) -> User | None:
         """Get current logged-in user"""
         if not st.session_state.get("logged_in", False):
             return None
@@ -86,7 +87,7 @@ class SessionService:
             st.stop()
         return user
 
-    def get_session_info(self) -> Dict[str, Any]:
+    def get_session_info(self) -> dict[str, Any]:
         """Get current session information"""
         if not st.session_state.get("logged_in", False):
             return {"status": "not_logged_in"}

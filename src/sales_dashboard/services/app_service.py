@@ -1,20 +1,21 @@
 # services/app_service.py - Main application orchestrator
 from __future__ import annotations
 
-from typing import Dict, Any
 from dataclasses import dataclass
+from typing import Any
+
 from loguru import logger
 import streamlit as st
 
+from sales_dashboard.infrastructure.db_engine import create_all_tables
+from sales_dashboard.infrastructure.repositories.user_repository import (
+    SQLUserRepository,
+)
 from sales_dashboard.services.core.auth_service import AuthService
 from sales_dashboard.services.core.user_service import UserService
 from sales_dashboard.services.system.bootsrap_service import BootstrapService
 from sales_dashboard.services.system.health_service import HealthService
 from sales_dashboard.services.system.metadata_service import MetadataService
-from sales_dashboard.infrastructure.repositories.user_repository import (
-    SQLUserRepository,
-)
-from sales_dashboard.infrastructure.db_engine import create_all_tables
 
 
 @dataclass
@@ -44,7 +45,7 @@ class ApplicationService:
         self.metadata_service = MetadataService()
 
     @st.cache_resource
-    def initialize(_self) -> Dict[str, Any]:
+    def initialize(_self) -> dict[str, Any]:
         """One-time application initialization"""
         logger.info("Initializing application (cached)")
 

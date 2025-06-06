@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from typing import List
-
 from sales_dashboard.domain.models.user import User
-from sales_dashboard.domain.schemas.user import UserCreate, UserCreateByAdmin
 from sales_dashboard.domain.repository.user_repository import UserRepository
+from sales_dashboard.domain.schemas.user import UserCreate, UserCreateByAdmin
 from sales_dashboard.services.interfaces import (
-    UserServiceInterface,
     AuthServiceInterface,
+    UserServiceInterface,
 )
 
 
@@ -66,11 +64,11 @@ class UserService(UserServiceInterface):
 
         return self.user_repo.create(user)
 
-    def get_all_active_users(self) -> List[User]:
+    def get_all_active_users(self) -> list[User]:
         """Get all active users"""
         return self.user_repo.get_all_active()
 
-    def get_all_admins(self) -> List[User]:
+    def get_all_admins(self) -> list[User]:
         """Get all admin users"""
         return self.user_repo.get_all_admins()
 

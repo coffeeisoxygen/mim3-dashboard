@@ -226,6 +226,7 @@ ignore = [
     "S108",    # hardcoded temp file (OK in controlled env)
     "PLR0913", # Too many arguments (OK for ETL functions)
     "C901",    # Complex functions (OK for data transformation)
+    "D415",    # Missing docstring in module (OK for __init__.py)
 ]
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = [
@@ -243,6 +244,7 @@ ignore = [
     "C901",    # Too complex (OK for comprehensive tests)
     "T201",    # Print statements (OK for debugging tests)
     "B008",    # Function calls in defaults (OK for test fixtures)
+    "S101",    # Assert usage OK in tests
 ]
 "scripts/**/*.py" = [
     "T201",    # print() statements OK in scripts

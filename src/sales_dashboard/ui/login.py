@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-import streamlit as st
 from loguru import logger
 from pydantic import ValidationError
+import streamlit as st
 
 from sales_dashboard.domain.schemas.user import UserLogin
-from sales_dashboard.services.auth_service import AuthService
 from sales_dashboard.infrastructure.repositories.user_repository import (
     SQLUserRepository,
 )
+from sales_dashboard.services.auth_service import AuthService
 
 
 def _handle_validation_errors(
@@ -85,7 +85,7 @@ def _render_logout_interface() -> None:
 
     st.write("Terima kasih telah menggunakan Dashboard IM3.")
 
-    col1, col2, col3 = st.columns([1, 1, 1])
+    _, col2, _ = st.columns([1, 1, 1])
     with col2:
         if st.button("Logout", type="secondary", use_container_width=True):
             username = user.username if user else "Unknown"
@@ -106,7 +106,7 @@ def _render_login_interface() -> None:
             "Password", type="password", placeholder="Masukkan password"
         )
 
-        col1, col2, col3 = st.columns([1, 1, 1])
+        _, col2, _ = st.columns([1, 1, 1])
         with col2:
             if st.button("Login", type="primary", use_container_width=True):
                 if username and password:
@@ -116,7 +116,7 @@ def _render_login_interface() -> None:
                     st.warning("⚠️ Harap isi username dan password!")
 
     # Show login requirements
-    with st.expander("ℹ️ Persyaratan Login"):
+    with st.expander("i Persyaratan Login"):
         st.write("**Username:** Minimal 3 karakter, maksimal 50 karakter")
         st.write("**Password:** Minimal 6 karakter")
         st.write("")

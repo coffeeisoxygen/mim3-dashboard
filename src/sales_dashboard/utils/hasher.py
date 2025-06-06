@@ -19,8 +19,12 @@ class PasswordHasher(Protocol):
 class SimpleHasher:
     """Simple SHA256 hasher for development - NOT for production"""
 
-    def hash_password(self, password: str) -> str:
-        """Hash password using SHA256"""
+    def hash_password(self, password: str) -> str:  # noqa: PLR6301
+        """Hash password using SHA256
+
+        Note: Kept as instance method for Protocol consistency,
+        even though it doesn't use self.
+        """
         return hashlib.sha256(password.encode()).hexdigest()
 
     def verify_password(self, password: str, hashed: str) -> bool:
@@ -36,10 +40,10 @@ class BCryptHasher:
             import bcrypt
 
             self.bcrypt = bcrypt
-        except ImportError:
+        except ImportError as err:
             raise ImportError(
                 "bcrypt is required for BCryptHasher. Install with: uv add bcrypt"
-            )
+            ) from err
 
     def hash_password(self, password: str) -> str:
         """Hash password using bcrypt"""

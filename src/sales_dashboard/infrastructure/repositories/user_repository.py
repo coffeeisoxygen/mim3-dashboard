@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING
+
 from loguru import logger
 
 from sales_dashboard.domain.models.user import User
 from sales_dashboard.domain.repository.user_repository import UserRepository
 from sales_dashboard.infrastructure.db_engine import (
+    get_connection_session,
     get_streamlit_connection,
     reset_connection_cache,
-    get_connection_session,
 )
 from sales_dashboard.infrastructure.db_entities import UserEntity
 
@@ -19,7 +20,7 @@ if TYPE_CHECKING:
 class SQLUserRepository(UserRepository):
     """SQLAlchemy implementation with proper cache management"""
 
-    def get_by_username(self, username: str) -> Optional[User]:
+    def get_by_username(self, username: str) -> User | None:
         """Find user by username - ALWAYS FRESH for authentication"""
         conn = get_streamlit_connection()
         result = conn.query(
@@ -34,7 +35,7 @@ class SQLUserRepository(UserRepository):
         row = result.iloc[0]
         return self._pandas_to_domain(row)
 
-    def get_by_email(self, email: str) -> Optional[User]:
+    def get_by_email(self, email: str) -> User | None:
         """Find user by email - ALWAYS FRESH for authentication"""
         conn = get_streamlit_connection()
         result = conn.query(
@@ -49,7 +50,7 @@ class SQLUserRepository(UserRepository):
         row = result.iloc[0]
         return self._pandas_to_domain(row)
 
-    def get_by_id(self, user_id: int) -> Optional[User]:
+    def get_by_id(self, user_id: int) -> User | None:
         """Find user by ID - cached for performance"""
         conn = get_streamlit_connection()
         result = conn.query(
@@ -132,7 +133,7 @@ class SQLUserRepository(UserRepository):
         logger.info(f"User soft deleted successfully: {user_id}")
         return True
 
-    def get_all_active(self) -> List[User]:
+    def get_all_active(self) -> list[User]:
         """Get all active users - cached for performance"""
         conn = get_streamlit_connection()
         result = conn.query(
@@ -145,7 +146,7 @@ class SQLUserRepository(UserRepository):
 
         return [self._pandas_to_domain(row) for _, row in result.iterrows()]
 
-    def get_all_admins(self) -> List[User]:
+    def get_all_admins(self) -> list[User]:
         """Get all admin users - ALWAYS FRESH for bootstrap"""
         conn = get_streamlit_connection()
         result = conn.query(

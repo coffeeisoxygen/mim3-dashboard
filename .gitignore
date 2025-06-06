@@ -38,3 +38,8 @@ wheels/
 
 # future commit after finishing the project
 install/
+
+
+# editor
+.vscode/
+*._version.py

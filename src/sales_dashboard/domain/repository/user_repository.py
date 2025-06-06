@@ -1,5 +1,5 @@
-from typing import Optional, List
 from abc import ABC, abstractmethod
+
 from sales_dashboard.domain.models.user import User
 
 
@@ -7,17 +7,17 @@ class UserRepository(ABC):
     """Abstract user repository interface"""
 
     @abstractmethod
-    def get_by_username(self, username: str) -> Optional[User]:
+    def get_by_username(self, username: str) -> User | None:
         """Find user by username"""
         pass
 
     @abstractmethod
-    def get_by_email(self, email: str) -> Optional[User]:
+    def get_by_email(self, email: str) -> User | None:
         """Find user by email"""
         pass
 
     @abstractmethod
-    def get_by_id(self, user_id: int) -> Optional[User]:
+    def get_by_id(self, user_id: int) -> User | None:
         """Find user by ID"""
         pass
 
@@ -37,11 +37,11 @@ class UserRepository(ABC):
         pass
 
     @abstractmethod
-    def get_all_active(self) -> List[User]:
+    def get_all_active(self) -> list[User]:
         """Get all active users"""
         pass
 
     @abstractmethod
-    def get_all_admins(self) -> List[User]:
+    def get_all_admins(self) -> list[User]:
         """Get all admin users"""
         pass

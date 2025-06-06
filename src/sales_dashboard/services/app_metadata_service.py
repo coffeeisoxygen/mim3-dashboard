@@ -1,9 +1,9 @@
 # services/app_metadata_service.py
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 import streamlit as st
 

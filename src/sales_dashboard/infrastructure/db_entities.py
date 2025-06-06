@@ -1,5 +1,7 @@
 from __future__ import annotations
-from datetime import datetime, timezone
+
+from datetime import UTC, datetime
+
 from sqlalchemy import Boolean, DateTime, String, event
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -27,12 +29,12 @@ class UserEntity(Base):
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime, default=lambda: datetime.now(UTC), nullable=False
     )
     updated: Mapped[datetime] = mapped_column(
         DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
         nullable=False,
     )
 
@@ -47,4 +49,4 @@ class UserEntity(Base):
 @event.listens_for(UserEntity, "before_update")
 def update_timestamp(mapper, connection, target):
     """Update timestamp on entity update"""
-    target.updated = datetime.now(timezone.utc)
+    target.updated = datetime.now(UTC)

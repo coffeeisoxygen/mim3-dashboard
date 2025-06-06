@@ -1,16 +1,17 @@
 from __future__ import annotations
 
-from typing import Dict, Any
 from dataclasses import dataclass
+from typing import Any
+
 from loguru import logger
 import streamlit as st
 
-from sales_dashboard.services.system_bootstrap_service import SystemBootstrapService
-from sales_dashboard.services.health_service import HealthCheckService
+from sales_dashboard.infrastructure.db_engine import create_all_tables
 from sales_dashboard.infrastructure.repositories.user_repository import (
     SQLUserRepository,
 )
-from sales_dashboard.infrastructure.db_engine import create_all_tables
+from sales_dashboard.services.health_service import HealthCheckService
+from sales_dashboard.services.system_bootstrap_service import SystemBootstrapService
 
 
 @dataclass
@@ -24,7 +25,7 @@ class AppState:
 
 
 @st.cache_resource
-def initialize_application() -> Dict[str, Any]:
+def initialize_application() -> dict[str, Any]:
     """One-time application initialization - cached across all sessions"""
     logger.info("Initializing application (cached)")
 
@@ -64,7 +65,6 @@ def initialize_application() -> Dict[str, Any]:
 
 def ensure_app_ready() -> bool:
     """Ensure application is ready - call this at start of every page"""
-
     # Check if we've already verified in this session
     if st.session_state.get("app_verified", False):
         return True

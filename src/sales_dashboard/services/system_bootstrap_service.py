@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from typing import Optional
 from loguru import logger
 import streamlit as st
 
 from sales_dashboard.domain.models.user import User
 from sales_dashboard.domain.repository.user_repository import UserRepository
-from sales_dashboard.utils.hasher import get_password_hasher
 from sales_dashboard.infrastructure.db_engine import reset_connection_cache
+from sales_dashboard.utils.hasher import get_password_hasher
 
 
 class SystemBootstrapService:
@@ -17,9 +16,8 @@ class SystemBootstrapService:
         self.user_repo = user_repo
         self.hasher = get_password_hasher(use_bcrypt=False)
 
-    def ensure_default_admin(self) -> Optional[User]:
+    def ensure_default_admin(self) -> User | None:
         """Ensure default admin exists with proper cache management"""
-
         # Session state check (fastest)
         if st.session_state.get("bootstrap_completed", False):
             logger.debug("Bootstrap already completed in this session")
