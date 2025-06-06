@@ -1,3 +1,6 @@
 {
-    "taipyStudio.config.mainPythonFile": "_version.py"
+    "taipyStudio.config.mainPythonFile": "_version.py",
+    "conventionalCommits.scopes": [
+        "user"
+    ]
 }

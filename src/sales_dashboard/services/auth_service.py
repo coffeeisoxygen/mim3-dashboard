@@ -1,55 +1,97 @@
-"""Authentication service with modern type annotations"""
-
 from __future__ import annotations
 
-import hashlib
 from typing import Optional
-
 from loguru import logger
 
 from sales_dashboard.domain.models.user import User
-from sales_dashboard.infrastructure.repositories.user_repository import UserRepository
-
+from sales_dashboard.domain.schemas.user import UserCreate, UserCreateByAdmin, UserLogin
+from sales_dashboard.domain.repository.user_repository import UserRepository
+from sales_dashboard.utils.hasher import get_password_hasher
 
 class AuthService:
-    """Authentication service with proper typing"""
+    """Authentication and user management service"""
 
-    def __init__(self) -> None:
-        self._user_repo = UserRepository()
+    def __init__(self, user_repo: UserRepository):
+        self.user_repo = user_repo
+        self.hasher = get_password_hasher(use_bcrypt=False)  # Configure as needed
 
-    def authenticate(self, username: str, password: str) -> Optional[User]:
-        """Authenticate user with proper password validation"""
-        logger.debug(f"Authenticating user: {username}")
+    def authenticate(self, login_data: UserLogin) -> Optional[User]:
+        """Authenticate user login"""
+        logger.debug(f"Authenticating user: {login_data.username}")
 
-        user = self._user_repo.find_by_username(username)
-        if not user:
-            logger.warning(f"User not found: {username}")
+        user = self.user_repo.get_by_username(login_data.username)
+        if not user or not user.is_active:
+            logger.warning(f"User not found or inactive: {login_data.username}")
             return None
 
-        if not user.is_active:
-            logger.warning(f"Inactive user tried to login: {username}")
-            return None
-
-        # Simple password check for now (TODO: Hash properly with bcrypt)
-        if user.password == password:
-            logger.info(f"Authentication successful: {username}")
+        if self.hasher.verify_password(login_data.password, user.password):
+            logger.info(f"Authentication successful: {login_data.username}")
             return user
-        else:
-            logger.warning(f"Authentication failed: {username}")
-            return None
 
-    def _hash_password(self, password: str) -> str:
-        """Hash password - placeholder for now"""
-        # TODO: Use bcrypt or argon2 for production
-        return hashlib.sha256(password.encode()).hexdigest()
+        logger.warning(f"Authentication failed: {login_data.username}")
+        return None
 
-    def change_password(self, user: User, new_password: str) -> bool:
-        """Change user password"""
-        try:
-            user.password = self._hash_password(new_password)
-            self._user_repo.save(user)
-            logger.info(f"Password changed for user: {user.username}")
-            return True
-        except Exception as e:
-            logger.error(f"Failed to change password for {user.username}: {e}")
-            return False
+    def create_user(self, user_data: UserCreate) -> User:
+        """Create regular user (no admin privileges)"""
+        # Check if username/email already exists
+        if self.user_repo.get_by_username(user_data.username):
+            raise ValueError("Username already exists")
+
+        if self.user_repo.get_by_email(user_data.email):
+            raise ValueError("Email already exists")
+
+        # Create regular user
+        user = User(
+            id=None,
+            nama=user_data.nama,
+            email=user_data.email,
+            username=user_data.username,
+            password=self.hasher.hash_password(user_data.password),
+            is_admin=False,
+            is_active=True
+        )
+
+        return self.user_repo.create(user)
+
+    def create_user_by_admin(self, user_data: UserCreateByAdmin, admin_user: User) -> User:
+        """Create user with admin privileges (admin only)"""
+        if not admin_user.is_admin:
+            raise PermissionError("Only admin can create users with privileges")
+
+        # Check if username/email already exists
+        if self.user_repo.get_by_username(user_data.username):
+            raise ValueError("Username already exists")
+
+        if self.user_repo.get_by_email(user_data.email):
+            raise ValueError("Email already exists")
+
+        user = User(
+            id=None,
+            nama=user_data.nama,
+            email=user_data.email,
+            username=user_data.username,
+            password=self.hasher.hash_password(user_data.password),
+            is_admin=user_data.is_admin,
+            is_active=True
+        )
+
+        return self.user_repo.create(user)
+
+    def deactivate_user(self, user_id: int, admin_user: User) -> bool:
+        """Deactivate user (admin only)"""
+        if not admin_user.is_admin:
+            raise PermissionError("Only admin can deactivate users")
+
+        return self.user_repo.delete(user_id)
+
+    def make_admin(self, user_id: int, admin_user: User) -> User:
+        """Make user admin (admin only)"""
+        if not admin_user.is_admin:
+            raise PermissionError("Only admin can grant admin privileges")
+
+        user = self.user_repo.get_by_id(user_id)
+        if not user:
+            raise ValueError("User not found")
+
+        user.make_admin()
+        return self.user_repo.update(user)

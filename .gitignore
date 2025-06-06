@@ -22,3 +22,12 @@ wheels/
 
 # streamlit secret
 .streamlit/secrets.toml
+
+# Database
+data/
+*.Db
+
+#loging
+*.log
+
+#
