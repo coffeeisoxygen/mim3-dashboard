@@ -67,14 +67,14 @@ def _process_login_attempt(username: str, password: str) -> None:
 
 def _render_logout_interface() -> None:
     """Render the logout interface for authenticated users."""
-    current_user = st.session_state.get("user")
+    user = st.session_state.get("user")
     st.title("👋 Logout")
 
-    if current_user:
-        st.write(f"Selamat datang, **{current_user.nama}**!")
-        st.write(f"Email: {current_user.email}")
+    if user:
+        st.write(f"Selamat datang, **{user.nama}**!")
+        st.write(f"Email: {user.email}")
 
-        if current_user.is_admin:
+        if user.is_admin:
             st.success("🔧 Admin Access")
     else:
         st.write("Selamat datang!")
@@ -84,7 +84,7 @@ def _render_logout_interface() -> None:
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
         if st.button("Logout", type="secondary", use_container_width=True):
-            username = st.session_state.get("user", {}).get("username", "Unknown")
+            username = user.username if user else "Unknown"
             logger.info(f"User {username} logged out")
             st.session_state.logged_in = False
             st.session_state.user = None

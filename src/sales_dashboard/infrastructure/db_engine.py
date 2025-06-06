@@ -66,13 +66,40 @@ def get_db_session() -> Generator[Session, None, None]:
 
 @st.cache_resource
 def get_streamlit_connection():
-    """Get Streamlit connection for queries"""
+    """Get Streamlit SQL connection with optimized settings"""
+    # Ensure data directory exists
+    os.makedirs("data", exist_ok=True)
+
     return st.connection(
         "sales_db",
         type="sql",
         url="sqlite:///data/sales_dashboard.db",
-        ttl=600,  # Cache query results for 10 minutes
+        # No default TTL - we'll control per query based on use case
     )
+
+
+def reset_connection_cache() -> None:
+    """Reset Streamlit connection cache - call after data mutations"""
+    try:
+        conn = get_streamlit_connection()
+        conn.reset()
+        logger.debug("Streamlit connection cache reset")
+    except Exception as e:
+        logger.warning(f"Error resetting connection cache: {e}")
+
+
+@contextmanager
+def get_connection_session() -> Generator:
+    """Context manager for Streamlit connection sessions (for writes)"""
+    conn = get_streamlit_connection()
+
+    with conn.session as session:
+        try:
+            yield session
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
 
 
 def create_all_tables() -> None:
@@ -92,4 +119,8 @@ def reset_database() -> None:
         engine = get_database_engine()
         Base.metadata.drop_all(engine)
         Base.metadata.create_all(engine)
+
+        # Reset connection cache after schema changes
+        reset_connection_cache()
+
         logger.warning("Database reset completed")
