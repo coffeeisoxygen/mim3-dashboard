@@ -12,3 +12,13 @@ wheels/
 
 # github
 .github/instructions/
+
+# egg info
+*.egg-info/
+
+# version generated
+*.version
+*._version.py
+
+# streamlit secret
+.streamlit/secrets.toml
