@@ -5,7 +5,7 @@ from __future__ import annotations
 import streamlit as st
 from loguru import logger
 
-from sales_dashboard.log_setup import setup_logging
+from sales_dashboard.utils.log_setup import setup_logging
 from sales_dashboard.services.app_initialization_service import ensure_app_ready
 from sales_dashboard.services.app_metadata_service import show_app_info
 

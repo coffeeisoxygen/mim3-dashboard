@@ -12,7 +12,7 @@ wheels/
 
 # github
 .github/instructions/
-
+.github/prompts/
 # egg info
 *.egg-info/
 
@@ -24,10 +24,17 @@ wheels/
 .streamlit/secrets.toml
 
 # Database
-data/
 *.Db
-
+*.db
 #loging
 *.log
 
-#
+# test reports
+.reports/
+
+#cache
+.pytest_cache/
+.ruff_cache/
+
+# future commit after finishing the project
+install/
