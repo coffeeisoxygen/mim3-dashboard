@@ -1,4 +1,4 @@
-"""Authentication page - clean login/logout functionality."""
+"""Authentication page - clean login/logout with fragment isolation."""
 
 from __future__ import annotations
 
@@ -17,11 +17,20 @@ def show_login_page() -> None:
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
-        _render_login_form()
+        # Use fragment to isolate login form interactions
+        _render_login_form_fragment()
 
 
-def _render_login_form() -> None:
-    """Render the login form with clean styling."""
+@st.fragment  # 🎯 Fragment isolates this form from full page re-runs
+def _render_login_form_fragment() -> None:
+    """Render login form with fragment isolation for smooth UX."""
+
+    # Check if already logged in (avoid showing form after successful login)
+    if st.session_state.get("logged_in", False):
+        st.success("Login successful! Redirecting...")
+        st.rerun()  # This will trigger navigation to main app
+        return
+
     with st.form("login_form", clear_on_submit=False):
         st.subheader(AUTH.LOGIN_SUBTITLE, anchor=False)
 
@@ -57,25 +66,28 @@ def _handle_login_attempt(username: str, password: str) -> None:
         st.warning(AUTH.MISSING_FIELDS)
         return
 
-    # Attempt authentication
-    try:
-        user = authenticate_user(username, password)
+    # Show loading state
+    with st.spinner("Authenticating..."):
+        try:
+            user = authenticate_user(username, password)
 
-        if user:
-            # Success - set session state
-            st.session_state.user = user
-            st.session_state.logged_in = True
-            st.success(AUTH.WELCOME_MESSAGE.format(name=user.nama))
-            logger.info(f"User {user.username} logged in successfully")
-            st.rerun()
-        else:
-            # Failed authentication
-            st.error(AUTH.INVALID_CREDENTIALS)
-            logger.warning(f"Failed login attempt for username: {username}")
+            if user:
+                # Success - set session state
+                st.session_state.user = user
+                st.session_state.logged_in = True
+                st.success(AUTH.WELCOME_MESSAGE.format(name=user.nama))
+                logger.info(f"User {user.username} logged in successfully")
 
-    except Exception as e:
-        logger.error(f"Login error for {username}: {e}")
-        st.error("An error occurred during login. Please try again.")
+                # Fragment will handle the rerun smoothly
+                st.rerun()
+            else:
+                # Failed authentication
+                st.error(AUTH.INVALID_CREDENTIALS)
+                logger.warning(f"Failed login attempt for username: {username}")
+
+        except Exception as e:
+            logger.error(f"Login error for {username}: {e}")
+            st.error("An error occurred during login. Please try again.")
 
 
 def handle_logout() -> None:

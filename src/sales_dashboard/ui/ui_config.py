@@ -12,13 +12,19 @@ SidebarStateType = Literal["auto", "expanded", "collapsed"]
 
 @dataclass(frozen=True)
 class MaterialIcons:
-    """Material Design 3 icons for consistent UI."""
+    """Material Design 3 icons for modern UI."""
 
-    # Authentication
+    # Authentication & Users
     LOGIN = ":material/login:"
     LOGOUT = ":material/logout:"
     PERSON = ":material/person:"
     ADMIN_PANEL = ":material/admin_panel_settings:"
+
+    # States & Feedback
+    ERROR = ":material/error:"
+    SUCCESS = ":material/check_circle:"
+    WARNING = ":material/warning:"
+    LOADING = ":material/refresh:"
 
     # Navigation
     DASHBOARD = ":material/dashboard:"
@@ -58,14 +64,15 @@ class AppConfig:
 
 @dataclass(frozen=True)
 class AuthConfig:
-    """Authentication-related UI configuration."""
+    """Modern authentication UI configuration."""
 
-    LOGIN_TITLE = "User Authentication"
+    LOGIN_TITLE = "Sales Dashboard"
+    LOGIN_DESCRIPTION = "Secure access to your sales management tools"
     LOGIN_SUBTITLE = "Sign In"
     LOGIN_BUTTON_TEXT = "Sign In"
 
     # Messages
-    WELCOME_MESSAGE = "Welcome, {name}"
+    WELCOME_MESSAGE = "Welcome back, {name}!"
     INVALID_CREDENTIALS = "Invalid username or password"
     MISSING_FIELDS = "Please enter both username and password"
     LOGOUT_SUCCESS = "You have been logged out"
