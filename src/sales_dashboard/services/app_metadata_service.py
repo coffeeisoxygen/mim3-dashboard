@@ -50,7 +50,7 @@ def show_app_info() -> None:
     metadata = get_app_metadata()
     build_info = metadata.get_build_info()
 
-    with st.expander("ℹ️ App Information"):
+    with st.expander("app Information"):
         col1, col2 = st.columns(2)
 
         with col1:

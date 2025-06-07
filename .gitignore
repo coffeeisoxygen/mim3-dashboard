@@ -43,3 +43,6 @@ install/
 # editor
 .vscode/
 *._version.py
+
+# generated version
+src/sales_dashboard/_version.py

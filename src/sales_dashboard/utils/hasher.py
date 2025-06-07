@@ -19,7 +19,7 @@ class PasswordHasher(Protocol):
 class SimpleHasher:
     """Simple SHA256 hasher for development - NOT for production"""
 
-    def hash_password(self, password: str) -> str:  # noqa: PLR6301
+    def hash_password(self, password: str) -> str:
         """Hash password using SHA256
 
         Note: Kept as instance method for Protocol consistency,

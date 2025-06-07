@@ -47,6 +47,6 @@ class UserEntity(Base):
 
 # Event listener untuk auto-update timestamp
 @event.listens_for(UserEntity, "before_update")
-def update_timestamp(mapper, connection, target):
+def update_timestamp(_mapper, _connection, target):
     """Update timestamp on entity update"""
     target.updated = datetime.now(UTC)

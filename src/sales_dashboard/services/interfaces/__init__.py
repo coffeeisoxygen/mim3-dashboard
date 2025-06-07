@@ -1,7 +1,7 @@
 # services/interfaces/__init__.py
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Protocol
+from typing import Any, Protocol
 
 from sales_dashboard.domain.models.user import User
 from sales_dashboard.domain.schemas.user import UserCreate, UserCreateByAdmin, UserLogin
@@ -64,19 +64,21 @@ class MetadataServiceInterface(Protocol):
     def show_app_info(self) -> None: ...
 
 
-class AdvancedBootstrapService(BootstrapServiceInterface):
+class AdvancedBootstrapServiceInterface(Protocol):
+    """Advanced bootstrap service contract for ETL operations"""
+
     def ensure_database_schema(self) -> bool:
         """Ensure database schema is up to date"""
-        return True
+        ...
 
     def ensure_default_settings(self) -> dict[str, Any]:
         """Ensure default application settings"""
-        return {}
+        ...
 
     def ensure_sample_data(self) -> bool:
         """Create sample data for demo purposes"""
-        return True
+        ...
 
     def validate_environment(self) -> dict[str, Any]:
         """Validate runtime environment for ETL operations"""
-        return {}
+        ...

@@ -227,6 +227,8 @@ ignore = [
     "PLR0913", # Too many arguments (OK for ETL functions)
     "C901",    # Complex functions (OK for data transformation)
     "D415",    # Missing docstring in module (OK for __init__.py)
+    "D416",    # Missing docstring in class (OK for __init__.py)
+    "PLR6301", # Method could be a function (OK for test classes)
 ]
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = [

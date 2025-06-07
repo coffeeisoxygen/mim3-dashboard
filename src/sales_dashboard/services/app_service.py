@@ -45,7 +45,7 @@ class ApplicationService:
         self.metadata_service = MetadataService()
 
     @st.cache_resource
-    def initialize(_self) -> dict[str, Any]:
+    def initialize(self) -> dict[str, Any]:
         """One-time application initialization"""
         logger.info("Initializing application (cached)")
 
@@ -54,7 +54,7 @@ class ApplicationService:
             create_all_tables()
 
             # Health check
-            health_status = _self.health_service.check_database_health()
+            health_status = self.health_service.check_database_health()
             if health_status["status"] != "healthy":
                 return {
                     "success": False,
@@ -62,8 +62,8 @@ class ApplicationService:
                 }
 
             # Bootstrap if enabled
-            if _self.config.auto_create_admin:
-                default_admin = _self.bootstrap_service.ensure_default_admin()
+            if self.config.auto_create_admin:
+                default_admin = self.bootstrap_service.ensure_default_admin()
                 if not default_admin:
                     return {
                         "success": False,
