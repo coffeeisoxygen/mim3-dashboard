@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-
 from loguru import logger
 import streamlit as st
 
+from sales_dashboard.core.session_management import session_manager
 from sales_dashboard.models.user_operations import authenticate_user
 from sales_dashboard.ui.ui_config import ICONS
 
@@ -17,10 +16,8 @@ def show_login_page() -> None:
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
-        # Simple welcome message instead of complex header
-        st.markdown(
-            "## :streamlit: SDP IM3`Report Management System"
-        )  # ✅ Simple and clean
+        # Simple welcome message
+        st.markdown("## Welcome")  # Clean and simple
         st.markdown("")  # Simple spacing
 
         # The login form
@@ -55,10 +52,10 @@ def _render_clean_login_form() -> None:
         )
 
         if submitted:
-            _handle_clean_login(username, password)
+            _handle_login(username, password)
 
 
-def _handle_clean_login(username: str, password: str) -> None:
+def _handle_login(username: str, password: str) -> None:
     """Handle login with clean UX."""
     # Simple validation
     if not username or not password:
@@ -71,15 +68,11 @@ def _handle_clean_login(username: str, password: str) -> None:
             user = authenticate_user(username, password)
 
             if user:
-                # Set session state
-                st.session_state.user = user
-                st.session_state.logged_in = True
-                st.session_state.login_time = datetime.now()
-                st.session_state.last_activity = datetime.now()
+                # Use session manager for login
+                session_manager.login_user(user)
 
                 # Simple success
                 st.success(f"Welcome, {user.nama}!")
-                logger.info(f"User {user.username} logged in successfully")
                 st.rerun()
             else:
                 # Clean error
@@ -92,35 +85,6 @@ def _handle_clean_login(username: str, password: str) -> None:
 
 
 def handle_logout() -> None:
-    """Clean logout."""
-    username = getattr(st.session_state.get("user"), "username", "unknown")
-
-    # Clear session
-    st.session_state.user = None
-    st.session_state.logged_in = False
-    st.session_state.login_time = None
-    st.session_state.last_activity = None
-
-    # Log and notify
-    logger.info(f"User {username} logged out")
-    st.toast("Logged out successfully", icon="✅")
+    """Clean logout - delegates to session manager."""
+    session_manager.logout_user()
     st.rerun()
-
-
-def show_user_info_sidebar(user) -> None:
-    """Clean sidebar - GitHub style."""
-    with st.sidebar:
-        # Simple user info
-        if user.is_admin:
-            st.write(f"👑 **{user.nama}**")
-            st.caption(f"Administrator (@{user.username})")
-        else:
-            st.write(f"👤 **{user.nama}**")
-            st.caption(f"User (@{user.username})")
-
-        # Session info
-        if st.session_state.get("login_time"):
-            login_time = st.session_state.login_time
-            st.caption(f"Signed in at {login_time.strftime('%H:%M')}")
-
-        st.divider()

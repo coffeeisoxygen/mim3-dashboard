@@ -313,6 +313,20 @@ def admin_reset_user_password(
         return False
 
 
+def get_user_by_username(username: str) -> Optional[UserEntity]:
+    """Get user by username - simple query function"""
+    try:
+        with get_db_session() as session:
+            return (
+                session.query(UserEntity)
+                .filter(UserEntity.username == username, UserEntity.is_active)
+                .first()
+            )
+    except Exception as e:
+        logger.error(f"Failed to get user by username {username}: {e}")
+        return None
+
+
 # =============================================================================
 # 🔒 PRIVATE HELPER FUNCTIONS
 # =============================================================================

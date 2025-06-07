@@ -52,3 +52,4 @@ src/sales_dashboard/_version.py
 *.env
 
 .sample/
+.streamlit_session
