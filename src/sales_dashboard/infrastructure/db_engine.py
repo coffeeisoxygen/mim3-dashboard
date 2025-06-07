@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from loguru import logger
 from sqlalchemy import create_engine
@@ -12,9 +12,6 @@ import streamlit as st
 
 from sales_dashboard.utils.hasher import get_password_hasher
 
-# =============================================================================
-# 🔧 DATABASE CONFIGURATION
-# =============================================================================
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
 DATABASE_URL = f"sqlite:///{DATA_DIR}/sales_dashboard.db"
@@ -24,9 +21,6 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
 
-# =============================================================================
-# 🗄️ CORE DATABASE ENGINE & SESSIONS
-# =============================================================================
 @st.cache_resource
 def get_database_engine() -> Engine:
     """Get database engine - cached for application lifetime"""
@@ -66,22 +60,26 @@ def get_session_factory() -> sessionmaker[Session]:
         raise
 
 
-def get_database_session() -> Session:
-    """Get database session - NOT cached, create new each time"""
-    try:
-        SessionLocal = get_session_factory()
-        return SessionLocal()
-    except Exception as e:
-        logger.error(f"Failed to create database session: {e}")
-        raise
-
-
 @contextmanager
 def get_db_session() -> Generator[Session, None, None]:
-    """Context manager for database sessions - recommended approach"""
+    """Database session context manager - STANDARD approach for all operations.
+
+    This is our single session pattern following SQLAlchemy best practices.
+
+    Usage:
+        with get_db_session() as session:
+            user = session.query(UserEntity).filter(...).first()
+
+    Features:
+    - Auto-commit on success
+    - Auto-rollback on error
+    - Proper session cleanup
+    - Type-safe with UserEntity models
+    """
     session = None
     try:
-        session = get_database_session()
+        SessionLocal = get_session_factory()
+        session = SessionLocal()
         yield session
         session.commit()
     except Exception as e:
@@ -94,60 +92,6 @@ def get_db_session() -> Generator[Session, None, None]:
             session.close()
 
 
-# =============================================================================
-# 🔗 STREAMLIT CONNECTIONS & CACHING
-# =============================================================================
-@st.cache_resource
-def get_streamlit_connection() -> Any:
-    """Get Streamlit SQL connection with configured settings"""
-    try:
-        # ✅ SIMPLE PATH - Direct database URL
-        db_path = Path(DATABASE_URL.replace("sqlite:///", ""))
-        db_path.parent.mkdir(parents=True, exist_ok=True)
-
-        return st.connection(
-            "sales_db",
-            type="sql",
-            url=DATABASE_URL,
-        )
-    except Exception as e:
-        logger.error(f"Failed to create Streamlit connection: {e}")
-        raise
-
-
-def reset_connection_cache() -> None:
-    """Reset Streamlit connection cache - call after data mutations"""
-    try:
-        conn = get_streamlit_connection()
-        if hasattr(conn, "reset"):
-            conn.reset()
-            logger.debug("Streamlit connection cache reset")
-        else:
-            logger.warning("Connection does not support reset method")
-    except Exception as e:
-        logger.warning(f"Error resetting connection cache: {e}")
-
-
-@contextmanager
-def get_connection_session() -> Generator[Any, None, None]:
-    """Context manager for Streamlit connection sessions (for writes)"""
-    conn = None
-    session = None
-    try:
-        conn = get_streamlit_connection()
-        session = conn.session
-        yield session
-        session.commit()
-    except Exception as e:
-        if session:
-            session.rollback()
-        logger.error(f"Connection session error: {e}")
-        raise
-
-
-# =============================================================================
-# 🏗️ DATABASE OPERATIONS (Tables, Schema Management)
-# =============================================================================
 def create_all_tables() -> None:
     """Create all database tables"""
     try:
@@ -171,9 +115,6 @@ def reset_database() -> None:
             Base.metadata.drop_all(engine)
             Base.metadata.create_all(engine)
 
-            # Reset connection cache after schema changes
-            reset_connection_cache()
-
             logger.warning("Database reset completed")
         else:
             logger.warning("Database reset attempted but debug_mode is not enabled")
@@ -182,9 +123,6 @@ def reset_database() -> None:
         raise
 
 
-# =============================================================================
-# 🚀 DATABASE INITIALIZATION & BOOTSTRAP
-# =============================================================================
 @st.cache_resource
 def ensure_database_ready() -> bool:
     """Initialize database - Streamlit native caching approach"""
@@ -240,13 +178,56 @@ def create_default_admin() -> bool:
         raise
 
 
-# DEVNOTE : this is just a reminder we we got a troble to check the streamlit docs
-# =============================================================================
-# - Current session state approach works but cache might be more Streamlit-native
-# - Evaluate performance impact before switching
-# - See Streamlit docs: https://docs.streamlit.io/develop/concepts/architecture/caching
+# UNUSED STREAMLIT CONNECTION CODE - RESERVED FOR FUTURE MIGRATION
+# =================================================================
+# The following functions are commented out as they're not currently used.
+# They provide Streamlit native connection functionality as an alternative
+# to the current SQLAlchemy approach.
 
-# TODO: Remove Streamlit connection complexity after user operations migration
-# - Once we fully migrate to simple user_operations.py functions
-# - We can remove get_streamlit_connection() and related cache management
-# - Simplify to just SQLAlchemy sessions via get_db_session()
+# @st.cache_resource
+# def get_streamlit_connection() -> Any:
+#     """Get Streamlit SQL connection - NOT CURRENTLY USED
+#
+#     DEVNOTE: Reserved for future Streamlit connection migration
+#     Current code uses get_db_session() SQLAlchemy approach
+#     """
+#     try:
+#         db_path = Path(DATABASE_URL.replace("sqlite:///", ""))
+#         db_path.parent.mkdir(parents=True, exist_ok=True)
+#
+#         return st.connection(
+#             "sales_db",
+#             type="sql",
+#             url=DATABASE_URL,
+#         )
+#     except Exception as e:
+#         logger.error(f"Failed to create Streamlit connection: {e}")
+#         raise
+
+# @contextmanager
+# def get_connection_session() -> Generator[Any, None, None]:
+#     """Context manager for Streamlit connection sessions (for writes)"""
+#     conn = None
+#     session = None
+#     try:
+#         conn = get_streamlit_connection()
+#         session = conn.session
+#         yield session
+#         session.commit()
+#     except Exception as e:
+#         if session:
+#             session.rollback()
+#         logger.error(f"Connection session error: {e}")
+#         raise
+
+# def reset_connection_cache() -> None:
+#     """Reset Streamlit connection cache - call after data mutations"""
+#     try:
+#         conn = get_streamlit_connection()
+#         if hasattr(conn, "reset"):
+#             conn.reset()
+#             logger.debug("Streamlit connection cache reset")
+#         else:
+#             logger.warning("Connection does not support reset method")
+#     except Exception as e:
+#         logger.warning(f"Error resetting connection cache: {e}")

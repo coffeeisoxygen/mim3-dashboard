@@ -9,7 +9,6 @@ from .db_engine import (
     ensure_database_ready,
     get_database_engine,
     get_db_session,
-    reset_connection_cache,
 )
 from .db_entities import Base, UserEntity
 
@@ -20,7 +19,6 @@ __all__ = [
     "get_database_engine",
     "create_all_tables",
     # Cache management
-    "reset_connection_cache",
     # Database entities
     "Base",
     "UserEntity",
