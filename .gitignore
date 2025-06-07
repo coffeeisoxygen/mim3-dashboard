@@ -46,3 +46,7 @@ install/
 
 # generated version
 src/sales_dashboard/_version.py
+
+# environment variables
+.env
+*.env

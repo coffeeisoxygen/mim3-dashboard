@@ -1,7 +1,8 @@
 {
     "taipyStudio.config.mainPythonFile": "_version.py",
     "conventionalCommits.scopes": [
-        "user"
+        "user",
+        "GLOBAL"
     ],
     "ruff.configurationPreference": "filesystemFirst",
     "ruff.configuration": "./pyproject.toml",

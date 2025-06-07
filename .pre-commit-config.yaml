@@ -1,120 +1,67 @@
+# Pre-commit configuration for sales dashboard project
 # See https://pre-commit.com for more information
-# See https://pre-commit.com/hooks.html for more hooks
+
 repos:
-  # ========================================
-  # 1. PRE-COMMIT HOOKS (Basic Checks)
-  # ========================================
+  # Basic file validation and formatting
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
-      # File ending fixes (auto-fix)
+      # Auto-fix file endings
       - id: trailing-whitespace
-        name: "trim trailing whitespace"
         args: [--markdown-linebreak-ext=md]
-
       - id: end-of-file-fixer
-        name: "fix end of files"
 
-      # Basic file validation
+      # File format validation
       - id: check-json
-        name: "check json"
-
       - id: check-toml
-        name: "check toml"
-
       - id: check-yaml
-        name: "check yaml"
 
-      # Security & safety checks
+      # Security and safety
       - id: check-added-large-files
-        name: "check for added large files"
-        args: ["--maxkb=5000"] # 5MB limit
-
+        args: ["--maxkb=5000"]
       - id: check-merge-conflict
-        name: "check for merge conflicts"
-
       - id: check-case-conflict
-        name: "check for case conflicts"
 
       # Script validation
       - id: check-executables-have-shebangs
-        name: "check that executables have shebangs"
-
       - id: check-shebang-scripts-are-executable
-        name: "check that scripts with shebangs are executable"
 
-      # Python syntax validation
+      # Python validation
       - id: check-ast
-        name: "check python ast"
-
-      # Python code quality
       - id: check-builtin-literals
-        name: "check builtin type constructor use"
-
       - id: check-docstring-first
-        name: "check docstring is first"
-
       - id: debug-statements
-        name: "debug statements (Python)"
 
-  # # ========================================
-  # # 2. PRETTIER (File Formatting)
-  # # ========================================
-  # - repo: https://github.com/pre-commit/mirrors-prettier
-  #   rev: v4.0.0-alpha.8
-  #   hooks:
-  #     - id: prettier
-  #       name: "format json/yaml"
-  #       files: '\.(json|yaml|yml)$'
-
-  # ========================================
-  # 3. RUFF (Python Formatting & Linting)
-  # ========================================
+  # Python formatting and linting with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: "v0.11.13"
     hooks:
-      # Format first, then lint
       - id: ruff-format
-        name: "ruff format"
         types_or: [python, pyi]
-
       - id: ruff
-        name: "ruff lint"
         args: [--fix, --exit-non-zero-on-fix]
         types_or: [python, pyi]
 
-  # ========================================
-  # 4. UV (Dependency Management)
-  # ========================================
+  # Dependency management with UV
   - repo: https://github.com/astral-sh/uv-pre-commit
     rev: 0.7.11
     hooks:
-      # Update lockfile when deps change
       - id: uv-lock
-        name: "uv lock"
         files: ^pyproject\.toml$
-
-      # Keep dependencies synced
       - id: uv-sync
-        name: "uv sync"
         stages: [post-checkout, post-merge, post-rewrite]
 
-  # ========================================
-  # 5. CONVENTIONAL COMMITS
-  # ========================================
+  # Conventional commits
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v4.2.0
     hooks:
       - id: conventional-pre-commit
-        name: "conventional commit"
         stages: [commit-msg]
 
-  # ========================================
-  # 6. LOCAL HOOKS (Project-Specific)
-  # ========================================
+  # Local project-specific hooks
   - repo: local
     hooks:
-      # Type checking
+      # Type checking with Pyright
       - id: pyright
         name: "pyright type check"
         entry: uv run pyright
@@ -123,45 +70,14 @@ repos:
         pass_filenames: false
         args: ["src/"]
 
-      # Custom project checks
+      # Basic gitattributes consistency check
       - id: gitattributes-check
         name: "check gitattributes consistency"
         entry: python -c "import sys; print('LF check passed')"
         language: system
         files: '\.(py|toml|yaml|yml)$'
 
-  # # ========================================
-  # # 7. SECURITY CHECKS
-  # # ========================================
-
-  # - repo: https://github.com/gitleaks/gitleaks
-  #   rev: v8.27.0
-  #   hooks:
-  #     - id: gitleaks
-  #       name: "detect hardcoded secrets"
-  #       description: "Detect hardcoded secrets using Gitleaks"
-  #       entry: gitleaks detect --source . --config .gitleaks.toml --report-format json --report-path .reports/gitleaks.json
-
-  # # ========================================
-  # # 8. SECURITY AUDITS
-  # # ========================================
-  # - repo: https://github.com/PyCQA/bandit
-  #   rev: "1.7.10"
-  #   hooks:
-  #     - id: bandit
-  #       name: "security audit"
-  #       args: ["-r", "src/", "-f", "json", "-o", ".reports/bandit.json"]
-
-  # - repo: https://github.com/PyCQA/safety
-  #   rev: "3.2.11"
-  #   hooks:
-  #     - id: safety
-  #       name: "dependency vulnerability check"
-  #       args: ["-r", "src/", "-f", "json", "-o", ".reports/safety.json"]
-
-# ========================================
-# CONFIGURATION
-# ========================================
+# Configuration
 default_install_hook_types:
   - pre-commit
   - post-checkout
@@ -169,13 +85,10 @@ default_install_hook_types:
   - post-rewrite
   - commit-msg
 
-# Only run hooks on changed files for speed
 default_stages: [pre-commit]
-
-# Fail fast - stop on first failure
 fail_fast: true
 
-# Exclude patterns
+# Exclude auto-generated and build files
 exclude: |
   (?x)^(
     src/sales_dashboard/_version\.py|

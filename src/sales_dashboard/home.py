@@ -1,62 +1,110 @@
-"""Main application entry point with modern Python features."""
+"""Sales Dashboard - Main Application with Dynamic Navigation.
+
+Role-based multipage app following Streamlit best practices.
+"""
 
 from __future__ import annotations
 
-from loguru import logger
 import streamlit as st
 
-from sales_dashboard.services.app_initialization_service import ensure_app_ready
-from sales_dashboard.services.app_metadata_service import show_app_info
-from sales_dashboard.utils.log_setup import setup_logging
-
-# Setup logging once
-setup_logging(debug=True)
-
-# Ensure app is ready (cached, runs once across sessions)
-if not ensure_app_ready():
-    st.stop()
-
-# Initialize session state once per session
-if "session_initialized" not in st.session_state:
-    st.session_state.session_initialized = True
-    st.session_state.logged_in = False
-    st.session_state.user = None
-    logger.debug("Session state initialized")
-
-# App metadata in sidebar
-with st.sidebar:
-    show_app_info()
-
-# Pages configuration
-auth_page = st.Page("ui/login.py", title="Authentication", icon=":material/login:")
-dashboard = st.Page(
-    "ui/dashboard.py", title="Dashboard", icon=":material/dashboard:", default=True
+from sales_dashboard.infrastructure.db_engine import ensure_database_ready
+from sales_dashboard.ui.pages.pg_authentication import (
+    handle_logout,
+    show_login_page,
+    show_user_info_sidebar,
 )
 
-# Navigation based on login status
-if st.session_state.logged_in:
+# Import our clean configuration
+from sales_dashboard.ui.ui_config import APP, ICONS, NAV
+from sales_dashboard.utils.log_setup import setup_logging
+
+# =============================================================================
+# 🚀 PAGE CONFIGURATION - MUST BE FIRST
+# =============================================================================
+
+st.set_page_config(**APP.PAGE_CONFIG)
+
+# =============================================================================
+# 🚀 APPLICATION INITIALIZATION
+# =============================================================================
+
+
+# Initialize core services
+setup_logging(debug=True)
+try:
+    ensure_database_ready()
+except Exception:
+    st.error("Failed to initialize database. Please contact support.")
+    st.stop()  # Halt app execution
+
+# Initialize session state
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "user" not in st.session_state:
+    st.session_state.user = None
+
+# =============================================================================
+# 📄 PAGE DEFINITIONS
+# =============================================================================
+
+# Authentication pages
+login = st.Page(show_login_page, title="Login", icon=ICONS.LOGIN)
+logout = st.Page(handle_logout, title="Logout", icon=ICONS.LOGOUT)
+
+# Main application pages
+dashboard = st.Page(
+    "ui/pages/dashboard.py",
+    title=NAV.DASHBOARD_TITLE,
+    icon=ICONS.DASHBOARD,
+    default=True,
+)
+profile = st.Page(
+    "ui/pages/profile.py",
+    title=NAV.PROFILE_TITLE,
+    icon=ICONS.PERSON,
+)
+
+# Admin pages
+admin_users = st.Page(
+    "ui/pages/admin/users.py",
+    title=NAV.USER_MANAGEMENT_TITLE,
+    icon=ICONS.GROUP,
+)
+admin_settings = st.Page(
+    "ui/pages/admin/settings.py",
+    title=NAV.SYSTEM_SETTINGS_TITLE,
+    icon=ICONS.SETTINGS,
+)
+
+# =============================================================================
+# 🧭 DYNAMIC NAVIGATION
+# =============================================================================
+
+# App title
+st.title(APP.TITLE)
+
+# Build navigation based on authentication
+if st.session_state.logged_in and st.session_state.user:
     user = st.session_state.user
 
-    if user and user.is_admin:
-        logger.debug(f"Admin user {user.username} - showing full navigation")
-        pg = st.navigation(
-            {
-                "Dashboard": [dashboard],
-                "Admin": [auth_page],
-            }
-        )
-    else:
-        logger.debug(
-            f"Regular user {user.username if user else 'Unknown'} - showing limited navigation"
-        )
-        pg = st.navigation(
-            {
-                "Dashboard": [dashboard],
-                "Account": [auth_page],
-            }
-        )
-else:
-    logger.debug("User not logged in - showing login page only")
-    pg = st.navigation([auth_page])
+    # Show user info in sidebar
+    show_user_info_sidebar(user)
 
+    # Build role-based page dictionary
+    page_dict = {
+        NAV.ACCOUNT_SECTION: [profile, logout],
+        NAV.REPORTS_SECTION: [dashboard],
+    }
+
+    # Add admin section if user is admin
+    if user.is_admin:
+        page_dict[NAV.ADMIN_SECTION] = [admin_users, admin_settings]
+
+    # Create navigation
+    pg = st.navigation(page_dict)
+else:
+    # Not logged in - show only login
+    pg = st.navigation([login])
+
+# Run the selected page
 pg.run()

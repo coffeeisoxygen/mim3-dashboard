@@ -10,29 +10,42 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import streamlit as st
 
+from sales_dashboard.utils.hasher import get_password_hasher
+
+# =============================================================================
+# 🔧 DATABASE CONFIGURATION
+# =============================================================================
+DATA_DIR = Path("data")
+DATA_DIR.mkdir(exist_ok=True)
+DATABASE_URL = f"sqlite:///{DATA_DIR}/sales_dashboard.db"
+
 if TYPE_CHECKING:
     from sqlalchemy import Engine
     from sqlalchemy.orm import Session
 
 
+# =============================================================================
+# 🗄️ CORE DATABASE ENGINE & SESSIONS
+# =============================================================================
 @st.cache_resource
 def get_database_engine() -> Engine:
     """Get database engine - cached for application lifetime"""
     try:
         logger.info("Creating database engine")
 
-        # Ensure data directory exists
-        Path("data").mkdir(parents=True, exist_ok=True)
+        # ✅ SIMPLE PATH - No complex settings
+        db_path = Path(DATABASE_URL.replace("sqlite:///", ""))
+        db_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Create engine with proper SQLite settings
+        # Create engine with simple configuration
         engine = create_engine(
-            "sqlite:///data/sales_dashboard.db",
+            DATABASE_URL,
             echo=False,  # Set True for SQL debugging
             pool_pre_ping=True,
-            pool_recycle=3600,  # Recycle connections after 1 hour
+            pool_recycle=3600,  # 1 hour
             connect_args={
-                "check_same_thread": False,  # Important for SQLite with multiple threads
-                "timeout": 30,  # Connection timeout
+                "check_same_thread": False,  # SQLite threading
+                "timeout": 30,
             },
         )
 
@@ -81,18 +94,21 @@ def get_db_session() -> Generator[Session, None, None]:
             session.close()
 
 
+# =============================================================================
+# 🔗 STREAMLIT CONNECTIONS & CACHING
+# =============================================================================
 @st.cache_resource
 def get_streamlit_connection() -> Any:
-    """Get Streamlit SQL connection with optimized settings"""
+    """Get Streamlit SQL connection with configured settings"""
     try:
-        # Ensure data directory exists
-        Path("data").mkdir(parents=True, exist_ok=True)
+        # ✅ SIMPLE PATH - Direct database URL
+        db_path = Path(DATABASE_URL.replace("sqlite:///", ""))
+        db_path.parent.mkdir(parents=True, exist_ok=True)
 
         return st.connection(
             "sales_db",
             type="sql",
-            url="sqlite:///data/sales_dashboard.db",
-            # No default TTL - we'll control per query based on use case
+            url=DATABASE_URL,
         )
     except Exception as e:
         logger.error(f"Failed to create Streamlit connection: {e}")
@@ -129,6 +145,9 @@ def get_connection_session() -> Generator[Any, None, None]:
         raise
 
 
+# =============================================================================
+# 🏗️ DATABASE OPERATIONS (Tables, Schema Management)
+# =============================================================================
 def create_all_tables() -> None:
     """Create all database tables"""
     try:
@@ -161,3 +180,73 @@ def reset_database() -> None:
     except Exception as e:
         logger.error(f"Failed to reset database: {e}")
         raise
+
+
+# =============================================================================
+# 🚀 DATABASE INITIALIZATION & BOOTSTRAP
+# =============================================================================
+@st.cache_resource
+def ensure_database_ready() -> bool:
+    """Initialize database - Streamlit native caching approach"""
+    try:
+        logger.info("Starting database initialization...")
+
+        # App-level operations cached for app lifetime
+        create_all_tables()
+        create_default_admin()
+
+        logger.info("Database initialized successfully")
+        return True
+
+    except Exception as e:
+        logger.error(f"Database initialization failed: {e}")
+        raise
+
+
+@st.cache_resource
+def create_default_admin() -> bool:
+    """Create default admin - cached to prevent duplicates"""
+    try:
+        from sales_dashboard.infrastructure.db_entities import UserEntity
+
+        with get_db_session() as session:
+            # Check if admin already exists
+            admin = (
+                session.query(UserEntity).filter(UserEntity.username == "admin").first()
+            )
+
+            if admin:
+                logger.debug("Admin user already exists - skipping creation")
+                return True
+
+            # Create admin user
+            hasher = get_password_hasher()
+            hashed_password = hasher.hash_password("admin123")
+
+            admin_user = UserEntity(
+                nama="Administrator",
+                email="admin@dashboard.com",
+                username="admin",
+                password=hashed_password,
+                is_admin=True,
+                is_active=True,
+            )
+            session.add(admin_user)
+            logger.info("Default admin user created successfully")
+            return True
+
+    except Exception as e:
+        logger.error(f"Failed to create default admin: {e}")
+        raise
+
+
+# DEVNOTE : this is just a reminder we we got a troble to check the streamlit docs
+# =============================================================================
+# - Current session state approach works but cache might be more Streamlit-native
+# - Evaluate performance impact before switching
+# - See Streamlit docs: https://docs.streamlit.io/develop/concepts/architecture/caching
+
+# TODO: Remove Streamlit connection complexity after user operations migration
+# - Once we fully migrate to simple user_operations.py functions
+# - We can remove get_streamlit_connection() and related cache management
+# - Simplify to just SQLAlchemy sessions via get_db_session()
