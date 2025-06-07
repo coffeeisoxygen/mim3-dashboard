@@ -1,21 +1,16 @@
-"""UI Configuration - centralized constants and settings."""
+"""UI Configuration - Modern Material Design constants with proper types."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Literal
-
-# Type aliases for Streamlit configuration
-LayoutType = Literal["centered", "wide"]
-SidebarStateType = Literal["auto", "expanded", "collapsed"]
 
 
 @dataclass(frozen=True)
 class MaterialIcons:
     """Material Design 3 icons for modern UI."""
 
-    # Authentication & Users
-    LOGIN = ":material/login:"
+    # Authentication & Users - Correct format
+    LOGIN = ":material/login:"  # ✅ Correct format
     LOGOUT = ":material/logout:"
     PERSON = ":material/person:"
     ADMIN_PANEL = ":material/admin_panel_settings:"
@@ -24,7 +19,6 @@ class MaterialIcons:
     ERROR = ":material/error:"
     SUCCESS = ":material/check_circle:"
     WARNING = ":material/warning:"
-    LOADING = ":material/refresh:"
 
     # Navigation
     DASHBOARD = ":material/dashboard:"
@@ -37,48 +31,28 @@ class MaterialIcons:
     DELETE = ":material/delete:"
     ADD = ":material/add:"
     SAVE = ":material/save:"
-    REFRESH = ":material/refresh:"
 
 
 @dataclass(frozen=True)
 class AppConfig:
-    """Main application configuration."""
+    """Modern application configuration."""
 
-    TITLE = "Sales Dashboard"
-    DESCRIPTION = "Internal sales management tool for MIM3 offices"
-
-    # Streamlit page config with proper typing
-    @property
-    def PAGE_CONFIG(self) -> dict[str, Any]:
-        """Page configuration for st.set_page_config()."""
-        layout: LayoutType = "wide"
-        sidebar_state: SidebarStateType = "expanded"
-
-        return {
-            "page_title": "Sales Dashboard",
-            "page_icon": MaterialIcons.DASHBOARD,
-            "layout": layout,
-            "initial_sidebar_state": sidebar_state,
-        }
+    TITLE: str = "Sales Dashboard"
+    DESCRIPTION: str = "Internal sales management tool for MIM3 offices"
 
 
 @dataclass(frozen=True)
 class AuthConfig:
     """Modern authentication UI configuration."""
 
-    LOGIN_TITLE = "Sales Dashboard"
-    LOGIN_DESCRIPTION = "Secure access to your sales management tools"
-    LOGIN_SUBTITLE = "Sign In"
-    LOGIN_BUTTON_TEXT = "Sign In"
+    LOGIN_TITLE: str = "Sales Dashboard"
+    LOGIN_SUBTITLE: str = "Secure access to your sales management tools"
+    LOGIN_BUTTON_TEXT: str = "Sign In"
 
-    # Messages
-    WELCOME_MESSAGE = "Welcome back, {name}!"
-    INVALID_CREDENTIALS = "Invalid username or password"
-    MISSING_FIELDS = "Please enter both username and password"
-    LOGOUT_SUCCESS = "You have been logged out"
-
-    # Session timeout (8 hours for office use)
-    SESSION_TIMEOUT_HOURS = 8
+    # Modern messages
+    WELCOME_MESSAGE: str = "Welcome back, {name}!"
+    INVALID_CREDENTIALS: str = "Invalid username or password"
+    MISSING_FIELDS: str = "Please enter both username and password"
 
 
 @dataclass(frozen=True)
@@ -86,15 +60,15 @@ class NavigationConfig:
     """Navigation structure configuration."""
 
     # Section names
-    ACCOUNT_SECTION = "Account"
-    REPORTS_SECTION = "Reports"
-    ADMIN_SECTION = "Administration"
+    ACCOUNT_SECTION: str = "Account"
+    REPORTS_SECTION: str = "Reports"
+    ADMIN_SECTION: str = "Administration"
 
     # Page titles
-    DASHBOARD_TITLE = "Dashboard"
-    PROFILE_TITLE = "Profile"
-    USER_MANAGEMENT_TITLE = "User Management"
-    SYSTEM_SETTINGS_TITLE = "System Settings"
+    DASHBOARD_TITLE: str = "Dashboard"
+    PROFILE_TITLE: str = "Profile"
+    USER_MANAGEMENT_TITLE: str = "User Management"
+    SYSTEM_SETTINGS_TITLE: str = "System Settings"
 
 
 # Global instances for easy import
@@ -102,3 +76,11 @@ ICONS = MaterialIcons()
 APP = AppConfig()
 AUTH = AuthConfig()
 NAV = NavigationConfig()
+
+# Streamlit page config as a simple dict with proper types
+PAGE_CONFIG = {
+    "page_title": "Sales Dashboard",
+    "page_icon": ":material/dashboard:",
+    "layout": "wide",
+    "initial_sidebar_state": "expanded",
+}
