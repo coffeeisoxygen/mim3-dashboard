@@ -12,6 +12,7 @@ import streamlit as st
 from sales_dashboard.core.session_management import session_manager
 from sales_dashboard.infrastructure.db_engine import ensure_database_ready
 from sales_dashboard.ui.pages.pg_authentication import handle_logout, show_login_page
+from sales_dashboard.ui.pages.pg_hpp_calculator import show_hpp_calculator_page
 from sales_dashboard.ui.ui_config import ICONS, NAV
 from sales_dashboard.utils.log_setup import setup_logging
 
@@ -72,6 +73,11 @@ profile = st.Page(
     title=NAV.PROFILE_TITLE,
     icon=ICONS.PERSON,
 )
+hpp_calculator = st.Page(
+    show_hpp_calculator_page,
+    title="HPP Calculator",
+    icon="📊",
+)
 
 # Admin pages
 admin_users = st.Page(
@@ -91,8 +97,8 @@ admin_settings = st.Page(
 
 
 def _show_user_info_at_absolute_bottom(user) -> None:
-    """Show user info at absolute bottom of sidebar."""
-    # Use CSS to position at absolute bottom
+    """Show user info at absolute bottom of sidebar with enhanced CSS."""
+    # Enhanced CSS for better reliability and responsiveness
     st.markdown(
         """
         <style>
@@ -102,19 +108,41 @@ def _show_user_info_at_absolute_bottom(user) -> None:
             left: 1rem;
             right: 1rem;
             max-width: 260px;
+            min-height: 2.5rem;
             background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
             border-radius: 8px;
-            padding: 0.5rem;
+            padding: 0.75rem;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .user-info-bottom .user-text {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+            line-height: 1.3;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .user-info-bottom {
+                left: 0.5rem;
+                right: 0.5rem;
+                bottom: 0.5rem;
+                max-width: none;
+            }
         }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
-    # User info in fixed container
+    # User info in fixed container with better structure
     role_display = "Admin" if user.is_admin else "User"
-    icon = "👑" if user.is_admin else "👤"
+    icon = "😎" if user.is_admin else "👤"
 
     session_time = ""
     if st.session_state.get("login_time"):
@@ -124,7 +152,7 @@ def _show_user_info_at_absolute_bottom(user) -> None:
     st.markdown(
         f"""
         <div class="user-info-bottom">
-            <div style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.7);">
+            <div class="user-text">
                 {icon} <strong>{user.nama}</strong> ({role_display}){session_time}
             </div>
         </div>
@@ -141,7 +169,7 @@ if st.session_state.logged_in and st.session_state.user:
     # Build navigation
     page_dict = {
         NAV.ACCOUNT_SECTION: [profile, logout],
-        NAV.REPORTS_SECTION: [dashboard],
+        NAV.REPORTS_SECTION: [dashboard, hpp_calculator],
     }
 
     if user.is_admin:

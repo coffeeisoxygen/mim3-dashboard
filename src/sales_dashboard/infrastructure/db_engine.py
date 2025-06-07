@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from loguru import logger
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 import streamlit as st
 
@@ -125,15 +125,30 @@ def reset_database() -> None:
 
 @st.cache_resource
 def ensure_database_ready() -> bool:
-    """Initialize database - Streamlit native caching approach"""
+    """Initialize database following check-first pattern.
+
+    Pattern for MIM3 office environment:
+    1. Verify database connectivity
+    2. Check/create schema (tables)
+    3. Check/create seed data (admin user)
+    4. Validate system is ready
+    """
     try:
-        logger.info("Starting database initialization...")
+        logger.info("🔍 Starting database initialization check...")
 
-        # App-level operations cached for app lifetime
-        create_all_tables()
-        create_default_admin()
+        # Step 1: Verify database connectivity
+        _verify_database_connection()
 
-        logger.info("Database initialized successfully")
+        # Step 2: Ensure schema exists (tables)
+        _ensure_schema_ready()
+
+        # Step 3: Ensure seed data exists (admin user)
+        _ensure_seed_data_ready()
+
+        # Step 4: Validate system is ready
+        _validate_system_ready()
+
+        logger.info("✅ Database initialization completed successfully")
         return True
 
     except Exception as e:
@@ -141,9 +156,140 @@ def ensure_database_ready() -> bool:
         raise
 
 
+def _verify_database_connection() -> None:
+    """Step 1: Check basic database connectivity."""
+    try:
+        engine = get_database_engine()
+
+        # Simple connectivity test
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1")).fetchone()
+
+        logger.info("📡 Database connection verified")
+
+    except Exception as e:
+        logger.error(f"Database connection failed: {e}")
+        raise
+
+
+def _ensure_schema_ready() -> None:
+    """Step 2: Check tables exist, create if missing."""
+    try:
+        engine = get_database_engine()
+
+        # Check if key table exists (faster than full introspection)
+        with engine.connect() as conn:
+            result = conn.execute(
+                text(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name='users'"
+                )
+            ).fetchone()
+
+        if result:
+            logger.info("Database schema verified - tables exist")
+        else:
+            logger.info("🔨 Creating database schema...")
+            create_all_tables()  # Use existing function
+            logger.info("Database schema created successfully")
+
+    except Exception as e:
+        logger.error(f"Schema creation failed: {e}")
+        raise
+
+
+def _ensure_seed_data_ready() -> None:
+    """Step 3: Check admin exists, create if missing."""
+    try:
+        from sales_dashboard.infrastructure.db_entities import UserEntity
+
+        with get_db_session() as session:
+            # Check admin existence
+            admin = (
+                session.query(UserEntity).filter(UserEntity.username == "admin").first()
+            )
+
+            if admin:
+                logger.info(
+                    f"Admin user verified: {admin.nama} (active: {admin.is_active})"
+                )
+
+                # Industry practice: Warn about inactive admin but don't fix automatically
+                if not admin.is_active:
+                    logger.warning(
+                        "Admin user exists but is inactive - manual intervention may be needed"
+                    )
+
+            else:
+                logger.info("Creating default admin user...")
+                _create_default_admin_user(session)
+                logger.info("Default admin user created successfully")
+
+    except Exception as e:
+        logger.error(f"Seed data creation failed: {e}")
+        raise
+
+
+def _validate_system_ready() -> None:
+    """Step 4: Final validation that system is operational."""
+    try:
+        from sales_dashboard.infrastructure.db_entities import UserEntity
+
+        with get_db_session() as session:
+            # Count total users (basic health check)
+            user_count = session.query(UserEntity).count()
+
+            # Verify at least one admin exists and is active
+            active_admin_count = (
+                session.query(UserEntity)
+                .filter(UserEntity.is_admin, UserEntity.is_active)
+                .count()
+            )
+
+            if active_admin_count == 0:
+                raise RuntimeError(
+                    "No active admin users found - system cannot operate"
+                )
+
+            logger.info(
+                f"🎯 System validation passed: {user_count} total users, {active_admin_count} active admins"
+            )
+
+    except Exception as e:
+        logger.error(f"System validation failed: {e}")
+        raise
+
+
+def _create_default_admin_user(session: Session) -> None:
+    """Create admin user with proper validation."""
+    from sales_dashboard.infrastructure.db_entities import UserEntity
+
+    try:
+        hasher = get_password_hasher()
+        hashed_password = hasher.hash_password("admin123")
+
+        admin_user = UserEntity(
+            nama="Administrator",
+            email="admin@dashboard.com",
+            username="admin",
+            password=hashed_password,
+            is_admin=True,
+            is_active=True,
+        )
+
+        session.add(admin_user)
+        logger.info(
+            "👑 Default credentials created: username='admin', password='admin123'"
+        )
+
+    except Exception as e:
+        logger.error(f"Admin user creation failed: {e}")
+        raise
+
+
+# Keep existing create_default_admin for backward compatibility
 @st.cache_resource
 def create_default_admin() -> bool:
-    """Create default admin - cached to prevent duplicates"""
+    """Create default admin - DEPRECATED: Use _ensure_seed_data_ready instead"""
     try:
         from sales_dashboard.infrastructure.db_entities import UserEntity
 
@@ -158,19 +304,7 @@ def create_default_admin() -> bool:
                 return True
 
             # Create admin user
-            hasher = get_password_hasher()
-            hashed_password = hasher.hash_password("admin123")
-
-            admin_user = UserEntity(
-                nama="Administrator",
-                email="admin@dashboard.com",
-                username="admin",
-                password=hashed_password,
-                is_admin=True,
-                is_active=True,
-            )
-            session.add(admin_user)
-            logger.info("Default admin user created successfully")
+            _create_default_admin_user(session)
             return True
 
     except Exception as e:
