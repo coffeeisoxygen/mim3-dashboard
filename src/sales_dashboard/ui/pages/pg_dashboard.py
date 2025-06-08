@@ -1,31 +1,26 @@
 """Dashboard Page - Main overview and key metrics.
 
-Available to all authenticated users.
+🔒 SECURITY: Available to all authenticated users.
 """
 
 from __future__ import annotations
 
 import streamlit as st
 
+from sales_dashboard.core.page_registry import page_registry
+
 
 def main() -> None:
-    """Dashboard page - native Streamlit navigation approach."""
+    """Dashboard page with security-first authentication."""
 
-    # Get user from session (set by navigation system)
-    user = st.session_state.get("user")
+    # 🔒 SECURITY CHECKPOINT - Primary security enforcement
+    page_config = page_registry.get_page_config("dashboard")
+    user = page_config.require_access()  # Guaranteed user or st.stop()
 
-    # Type guard - should not happen with proper navigation, but defensive programming
-    if not user:
-        st.error("⚠️ Session error. Please log in again.")
-        st.switch_page("ui/pages/pg_authentication.py")
-        return
-
+    # 🎯 Page logic - user is guaranteed to be valid and authorized
     st.header(f"📊 Dashboard - Welcome, {user.nama}")
 
-    # =============================================================================
-    # 📈 KEY METRICS OVERVIEW
-    # =============================================================================
-
+    # ===== KEY METRICS OVERVIEW =====
     st.subheader("📈 Key Metrics")
 
     # Placeholder metrics - will be replaced with real data later
@@ -43,32 +38,12 @@ def main() -> None:
     with col4:
         st.metric(label="Active Users", value="23", delta="-1")
 
-    # =============================================================================
-    # 📊 CHARTS AND VISUALIZATIONS
-    # =============================================================================
+    # ===== ROLE-BASED FEATURES =====
+    st.subheader("📋 Quick Actions")
 
-    st.subheader("📊 Sales Performance")
-
-    # Placeholder charts - will be replaced with real data
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.info("📈 **Sales Trend Chart**\n\nComing soon - sales performance over time")
-
-    with col2:
-        st.info(
-            "🗺️ **Territory Map**\n\nComing soon - interactive territory visualization"
-        )
-
-    # =============================================================================
-    # 📋 RECENT ACTIVITY
-    # =============================================================================
-
-    st.subheader("📋 Recent Activity")
-
-    # Show user-specific information
+    # 🔐 Role-based UI - user is guaranteed to exist
     if user.is_admin:
-        st.success("🔐 **Admin View** - You have access to all system features")
+        st.success("🔐 **Admin View** - Full system access")
 
         # Admin-specific quick actions
         col1, col2 = st.columns(2)
@@ -80,16 +55,10 @@ def main() -> None:
         with col2:
             if st.button("⚙️ System Settings", use_container_width=True):
                 st.switch_page("ui/pages/admin/pg_sys_settings.py")
-
     else:
-        st.info("👤 **User View** - Access to dashboard and profile features")
+        st.info("👤 **User View** - Standard access")
 
-    # =============================================================================
-    # 🎯 QUICK ACTIONS
-    # =============================================================================
-
-    st.subheader("🎯 Quick Actions")
-
+    # Common actions for all users
     col1, col2, col3 = st.columns(3)
 
     with col1:
@@ -97,28 +66,12 @@ def main() -> None:
             st.switch_page("ui/pages/pg_profile.py")
 
     with col2:
-        st.button("📊 Generate Report", use_container_width=True, disabled=True)
-        st.caption("Coming soon")
+        if st.button("🧮 HPP Calculator", use_container_width=True):
+            st.switch_page("ui/pages/pg_hpp_calculator.py")
 
     with col3:
-        st.button("📤 Export Data", use_container_width=True, disabled=True)
+        st.button("📊 Generate Report", disabled=True)
         st.caption("Coming soon")
-
-    # =============================================================================
-    # 📝 SYSTEM STATUS
-    # =============================================================================
-
-    with st.expander("🔧 System Status", expanded=False):
-        st.success("✅ Database connection: Active")
-        st.success("✅ Authentication system: Online")
-        st.info("ℹ️ Last updated: Real-time")
-
-        if user.is_admin:
-            st.write("**System Info:**")
-            st.write(f"- User ID: {user.id}")
-            st.write(f"- Username: {user.username}")
-            st.write(f"- Admin Status: {user.is_admin}")
-            st.write(f"- Account Created: {user.created}")
 
 
 # Entry point for navigation

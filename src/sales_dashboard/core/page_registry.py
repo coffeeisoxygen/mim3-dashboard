@@ -1,4 +1,4 @@
-"""Centralized page registry with role-based access control."""
+"""Centralized page registry with security-first role-based access control."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ class PageCategory(str, Enum):
 
 @dataclass
 class PageConfig:
-    """Page configuration with role-based access."""
+    """Page configuration with security-first role-based access control."""
 
     path: str
     title: str
@@ -44,31 +44,90 @@ class PageConfig:
     def create_page(self) -> st.Page:  # type: ignore
         """Create Streamlit page object with correct parameter order."""
         return st.Page(
-            self.path,  # ✅ First positional argument (page)
-            title=self.title,  # ✅ Named parameters
+            self.path,
+            title=self.title,
             icon=self.icon,
             default=self.default,
         )
 
     def can_access(self, user: "UserEntity | None") -> bool:
-        """Check if user can access this page."""
+        """Check if user can access this page (for navigation filtering)."""
         match self.group:
             case PageGroup.PUBLIC:
                 return True
             case PageGroup.GLOBAL:
-                return user is not None
+                return user is not None and user.is_active
             case PageGroup.ADMIN_ONLY:
-                return user is not None and user.is_admin
+                return user is not None and user.is_admin and user.is_active
             case _:
                 return False
 
+    def require_access(self) -> "UserEntity":
+        """🔒 SECURITY-FIRST: Enforce authentication and authorization.
+
+        This is the PRIMARY security enforcement point.
+        Every protected page MUST call this method.
+
+        Returns:
+            UserEntity: Authenticated and authorized user (guaranteed)
+
+        Note:
+            This function will call st.stop() if access is denied.
+            The calling page can assume they have a valid user after this call.
+        """
+        from sales_dashboard.core.auth_helper import (
+            get_current_user,
+            require_admin_access,
+            require_user_access,
+        )
+
+        match self.group:
+            case PageGroup.PUBLIC:
+                # Public pages don't require authentication, but if require_access() is called,
+                # we should return current user or None - but this method promises UserEntity
+                # So for public pages calling require_access(), we ensure there's a user
+                user = get_current_user()
+                if user is None:
+                    st.error(
+                        "🔒 Halaman ini memerlukan login. Silakan login terlebih dahulu."
+                    )
+                    st.switch_page("ui/pages/pg_authentication.py")
+                    st.stop()
+                return user  # Now guaranteed to be UserEntity
+
+            case PageGroup.GLOBAL:
+                # All logged-in users can access
+                user = require_user_access()  # Guaranteed UserEntity or st.stop()
+                if not user.is_active:
+                    st.error("🚫 Account tidak aktif. Hubungi administrator.")
+                    st.switch_page("ui/pages/pg_authentication.py")
+                    st.stop()
+                return user
+
+            case PageGroup.ADMIN_ONLY:
+                # Only admin users can access
+                user = (
+                    require_admin_access()
+                )  # Guaranteed admin UserEntity or st.stop()
+                if not user.is_active:
+                    st.error("🚫 Account tidak aktif. Hubungi administrator.")
+                    st.switch_page("ui/pages/pg_authentication.py")
+                    st.stop()
+                return user
+
+            case _:
+                # Unknown page group - deny access
+                st.error("❌ Akses tidak diizinkan untuk halaman ini")
+                st.switch_page("ui/pages/pg_authentication.py")
+                st.stop()
+
 
 class PageRegistry:
-    """Centralized registry for all pages with role-based access."""
+    """🔒 Security-first centralized registry for all pages with role-based access."""
 
-    # All page configurations grouped by access level
+    # All page configurations - easy to extend for new pages
     _PAGES = {
-        # Public pages (no login required)
+        # ===== PUBLIC PAGES =====
         "login": PageConfig(
             path="ui/pages/pg_authentication.py",
             title="Log in",
@@ -77,7 +136,7 @@ class PageRegistry:
             category=PageCategory.PUBLIC,
             description="Authentication page",
         ),
-        # Account pages
+        # ===== USER PAGES (GLOBAL ACCESS) =====
         "profile": PageConfig(
             path="ui/pages/pg_profile.py",
             title="Profile",
@@ -86,7 +145,6 @@ class PageRegistry:
             category=PageCategory.ACCOUNT,
             description="User profile management",
         ),
-        # Report pages
         "dashboard": PageConfig(
             path="ui/pages/pg_dashboard.py",
             title="Dashboard",
@@ -104,7 +162,7 @@ class PageRegistry:
             category=PageCategory.REPORTS,
             description="HPP calculation tool",
         ),
-        # Admin-only pages
+        # ===== ADMIN PAGES (ADMIN-ONLY ACCESS) =====
         "user_management": PageConfig(
             path="ui/pages/admin/pg_users_management.py",
             title="User Management",
@@ -147,18 +205,8 @@ class PageRegistry:
         ]
 
     @classmethod
-    def get_global_pages(cls, user: "UserEntity") -> list[st.Page]:  # type: ignore
-        """Get all global pages (accessible to all logged-in users)."""
-        return cls.get_pages_by_group(PageGroup.GLOBAL, user)
-
-    @classmethod
-    def get_admin_pages(cls, user: "UserEntity") -> list[st.Page]:  # type: ignore
-        """Get all admin-only pages."""
-        return cls.get_pages_by_group(PageGroup.ADMIN_ONLY, user)
-
-    @classmethod
     def get_accessible_pages(cls, user: "UserEntity | None") -> dict[str, st.Page]:  # type: ignore
-        """Get all pages accessible to user, organized by name."""
+        """🔒 Get all pages accessible to user for navigation (security filtering)."""
         return {
             name: config.create_page()
             for name, config in cls._PAGES.items()
@@ -166,9 +214,40 @@ class PageRegistry:
         }
 
     @classmethod
-    def get_page_config(cls, page_name: str) -> PageConfig | None:
-        """Get page configuration by name."""
-        return cls._PAGES.get(page_name)
+    def get_page_config(cls, page_name: str) -> PageConfig:
+        """Get page configuration by name.
+
+        Raises:
+            KeyError: If page is not found in registry
+        """
+        if page_name not in cls._PAGES:
+            raise KeyError(f"Page '{page_name}' not found in registry")
+        return cls._PAGES[page_name]
+
+    @classmethod
+    def add_page(cls, name: str, config: PageConfig) -> None:
+        """🆕 Add new page to registry (for future extensibility)."""
+        cls._PAGES[name] = config
+
+    @classmethod
+    def get_all_pages(cls) -> dict[str, PageConfig]:
+        """Get all registered pages (for admin/debugging purposes)."""
+        return cls._PAGES.copy()
+
+    @classmethod
+    def get_admin_pages(cls, user: "UserEntity") -> list[st.Page]:  # type: ignore
+        """Get admin-only pages if user is admin.
+
+        Args:
+            user: User entity to check admin status
+
+        Returns:
+            List of admin pages if user is admin, empty list otherwise
+        """
+        if not user.is_admin:
+            return []
+
+        return cls.get_pages_by_group(PageGroup.ADMIN_ONLY, user)
 
 
 # Global registry instance

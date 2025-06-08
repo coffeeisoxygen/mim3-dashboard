@@ -24,6 +24,7 @@ def require_login(func: F) -> F:
         user = session_manager.get_logged_in_user()
         if not user:
             st.error("🔒 Silakan login terlebih dahulu untuk mengakses halaman ini.")
+            st.switch_page("ui/pages/pg_authentication.py")
             st.stop()
             return
 
@@ -42,12 +43,14 @@ def require_admin(func: F) -> F:
         user = session_manager.get_logged_in_user()
         if not user:
             st.error("🔒 Silakan login terlebih dahulu untuk mengakses halaman ini.")
+            st.switch_page("ui/pages/pg_authentication.py")
             st.stop()
             return
 
         if not user.is_admin:
             st.error("❌ Anda tidak memiliki akses administrator untuk halaman ini.")
             logger.warning(f"Non-admin user {user.username} attempted admin access")
+            st.switch_page("ui/pages/pg_authentication.py")
             st.stop()
             return
 
@@ -58,30 +61,49 @@ def require_admin(func: F) -> F:
     return cast(F, wrapper)
 
 
-def require_user_access() -> Optional["UserEntity"]:
-    """Require user to be logged in. Returns user or stops execution."""
+def require_user_access() -> "UserEntity":
+    """Require user to be logged in. Returns user or stops execution.
+
+    Returns:
+        UserEntity: Authenticated user (guaranteed)
+
+    Note:
+        This function will call st.stop() if user is not authenticated.
+        The calling code can assume a valid user after this call.
+    """
+    # Check for session timeout first
     if session_manager.check_and_handle_session_timeout():
-        return None
+        st.error("🕐 Session telah berakhir. Silakan login kembali.")
+        st.switch_page("ui/pages/pg_authentication.py")
+        st.stop()
 
     user = session_manager.get_logged_in_user()
     if not user:
-        st.warning("🔒 Silakan login terlebih dahulu untuk mengakses halaman ini.")
+        st.error("🔒 Silakan login terlebih dahulu untuk mengakses halaman ini.")
+        st.switch_page("ui/pages/pg_authentication.py")
         st.stop()
-        return None
 
+    # At this point, user is guaranteed to be UserEntity
     return user
 
 
-def require_admin_access() -> Optional["UserEntity"]:
-    """Require user to be logged in as admin. Returns user or stops execution."""
-    user = require_user_access()
-    if not user:
-        return None
+def require_admin_access() -> "UserEntity":
+    """Require user to be logged in as admin. Returns user or stops execution.
+
+    Returns:
+        UserEntity: Authenticated admin user (guaranteed)
+
+    Note:
+        This function will call st.stop() if user is not authenticated or not admin.
+        The calling code can assume a valid admin user after this call.
+    """
+    user = require_user_access()  # This guarantees a UserEntity
 
     if not user.is_admin:
         st.error("❌ Anda tidak memiliki akses administrator untuk halaman ini.")
+        logger.warning(f"Non-admin user {user.username} attempted admin access")
+        st.switch_page("ui/pages/pg_authentication.py")
         st.stop()
-        return None
 
     return user
 

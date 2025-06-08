@@ -12,11 +12,8 @@ from sales_dashboard.core.streamlit_session_manager import session_manager
 from sales_dashboard.ui.components.user_info_sidebar import show_user_info_sidebar
 
 if TYPE_CHECKING:
-    from sales_dashboard.infrastructure.db_entities import UserEntity
+    pass
 
-# =============================================================================
-# 🚀 PAGE CONFIGURATION - MUST BE FIRST
-# =============================================================================
 
 st.set_page_config(
     page_title="SDP IM3 Report System",
@@ -33,32 +30,20 @@ bootstrap_application()
 session_manager.init_session_state()
 session_manager.check_and_handle_session_timeout()
 
-# =============================================================================
-# 🧭 STREAMLIT NAVIGATION WITH PAGE REGISTRY
-# =============================================================================
-
 
 def main() -> None:
-    """Main application using page registry for navigation."""
+    """Main application with role-based navigation."""
 
-    # Check authentication state
-    if not st.session_state.get("logged_in", False):
+    # ✅ Single source of truth for authentication
+    user = session_manager.get_logged_in_user()  # Returns UserEntity or None
+
+    # ✅ Build navigation based on authentication state
+    if user is None:
         # Unauthenticated - only show public pages
         public_pages = page_registry.get_pages_by_group(PageGroup.PUBLIC)
         pg = st.navigation(public_pages)
     else:
-        # Authenticated - get user with type safety
-        user: "UserEntity | None" = st.session_state.get("user")
-
-        # Type guard - ensure user exists and is properly typed
-        if user is None:
-            # Defensive programming - shouldn't happen but handle gracefully
-            st.error("🔄 Session error. Please log in again.")
-            st.session_state.logged_in = False
-            st.rerun()
-            return
-
-        # Show user info in sidebar
+        # Authenticated - show user info and role-based pages
         with st.sidebar:
             show_user_info_sidebar(user)
 
