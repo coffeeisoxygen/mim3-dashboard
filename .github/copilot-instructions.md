@@ -53,7 +53,8 @@ more info about project is at general-info.instructions.md about code style is a
   - use the latest stable Library and best practices
   - checking the documentation before implementing
   - if your response are long , break it down into smaller parts and ask follows up question
-  - dont make a big change in code , instead do incrementally with confirmation and explanation
+  - dont make a big change in code except for fixing bugs, make solution more robust, or adding new features, and
+    always ask for confirmation before making a big change, explain pro and cons , and why this is suggested
   - actively engage in discussion, proposing ideas and suggestions when necessary
   - force not to jump to conclusions or make assumptions without proper context
   - always ask for clarification if something is not clear
