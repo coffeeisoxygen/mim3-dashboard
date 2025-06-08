@@ -16,6 +16,7 @@ from sales_dashboard.config.constant import (
     SESSION_TIMEOUT_HOURS,
     USER_CACHE_TTL_MINUTES,
 )
+from sales_dashboard.config.messages import WARNING_SESSION_EXPIRED
 
 if TYPE_CHECKING:
     from sales_dashboard.infrastructure.db_entities import UserEntity
@@ -271,7 +272,7 @@ class StreamlitSessionManager:
 
         if is_expired:
             self.logout_user()
-            st.warning("⏰ Sesi telah berakhir setelah 8 jam. Silakan login kembali.")
+            st.warning(WARNING_SESSION_EXPIRED)
             st.rerun()
             return True
 

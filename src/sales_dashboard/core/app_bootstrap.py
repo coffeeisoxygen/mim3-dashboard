@@ -6,6 +6,7 @@ from loguru import logger
 import streamlit as st
 
 from sales_dashboard.config.constant import DEBUG_MODE
+from sales_dashboard.config.messages import ERROR_APP_INITIALIZATION
 from sales_dashboard.infrastructure.db_engine import ensure_database_ready
 from sales_dashboard.utils.log_setup import setup_logging
 
@@ -44,10 +45,6 @@ def bootstrap_application() -> None:
 
     except Exception as e:
         # User-friendly error for MIM3 office users
-        st.error(
-            "❌ **Gagal menginisialisasi aplikasi**\n\n"
-            "Silakan hubungi administrator atau restart aplikasi.\n\n"
-            f"Detail error: {str(e)}"
-        )
+        st.error(f"{ERROR_APP_INITIALIZATION}\n\nDetail error: {str(e)}")
         logger.error(f"Bootstrap failed: {e}")
         st.stop()

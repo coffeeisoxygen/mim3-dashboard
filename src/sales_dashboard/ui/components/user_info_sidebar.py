@@ -12,6 +12,27 @@ from typing import TYPE_CHECKING
 
 import streamlit as st
 
+from sales_dashboard.config.constant import (
+    SIDEBAR_USER_INFO_BORDER_RADIUS,
+    SIDEBAR_USER_INFO_BOTTOM_MARGIN,
+    SIDEBAR_USER_INFO_FONT_SIZE,
+    SIDEBAR_USER_INFO_INTERNAL_PADDING,
+    SIDEBAR_USER_INFO_LINE_HEIGHT,
+    SIDEBAR_USER_INFO_MIN_HEIGHT,
+    SIDEBAR_USER_INFO_MOBILE_MARGIN,
+    SIDEBAR_USER_INFO_SIDE_MARGIN,
+    SIDEBAR_USER_INFO_WIDTH,
+    SIDEBAR_USER_INFO_Z_INDEX,
+)
+from sales_dashboard.config.messages import (
+    ICON_ADMIN_FANCY,
+    ICON_ADMIN_SIMPLE,
+    ICON_USER_FANCY,
+    ICON_USER_SIMPLE,
+    ROLE_ADMIN_SHORT,
+    ROLE_USER_SHORT,
+)
+
 if TYPE_CHECKING:
     from sales_dashboard.infrastructure.db_entities import UserEntity
 
@@ -37,41 +58,41 @@ def show_user_info_sidebar(user: "UserEntity") -> None:
 def _inject_user_info_css() -> None:
     """Inject CSS styles for user info component."""
     st.markdown(
-        """
+        f"""
         <style>
-        .user-info-bottom {
+        .user-info-bottom {{
             position: fixed;
-            bottom: 1rem;
-            left: 1rem;
-            right: 1rem;
-            max-width: 260px;
-            min-height: 2.5rem;
+            bottom: {SIDEBAR_USER_INFO_BOTTOM_MARGIN};
+            left: {SIDEBAR_USER_INFO_SIDE_MARGIN};
+            right: {SIDEBAR_USER_INFO_SIDE_MARGIN};
+            max-width: {SIDEBAR_USER_INFO_WIDTH};
+            min-height: {SIDEBAR_USER_INFO_MIN_HEIGHT};
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
-            border-radius: 8px;
-            padding: 0.75rem;
+            border-radius: {SIDEBAR_USER_INFO_BORDER_RADIUS};
+            padding: {SIDEBAR_USER_INFO_INTERNAL_PADDING};
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
+            z-index: {SIDEBAR_USER_INFO_Z_INDEX};
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
+        }}
 
-        .user-info-bottom .user-text {
-            font-size: 0.8rem;
+        .user-info-bottom .user-text {{
+            font-size: {SIDEBAR_USER_INFO_FONT_SIZE};
             color: rgba(255, 255, 255, 0.9);
             margin: 0;
-            line-height: 1.3;
-        }
+            line-height: {SIDEBAR_USER_INFO_LINE_HEIGHT};
+        }}
 
         /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .user-info-bottom {
-                left: 0.5rem;
-                right: 0.5rem;
-                bottom: 0.5rem;
+        @media (max-width: 768px) {{
+            .user-info-bottom {{
+                left: {SIDEBAR_USER_INFO_MOBILE_MARGIN};
+                right: {SIDEBAR_USER_INFO_MOBILE_MARGIN};
+                bottom: {SIDEBAR_USER_INFO_MOBILE_MARGIN};
                 max-width: none;
-            }
-        }
+            }}
+        }}
         </style>
         """,
         unsafe_allow_html=True,
@@ -84,9 +105,9 @@ def _render_user_info_content(user: "UserEntity") -> None:
     Args:
         user: User entity to display
     """
-    # Role-based display
-    role_display = "Admin" if user.is_admin else "User"
-    icon = "😎" if user.is_admin else "🤓"
+    # Role-based display using centralized constants
+    role_display = ROLE_ADMIN_SHORT if user.is_admin else ROLE_USER_SHORT
+    icon = ICON_ADMIN_FANCY if user.is_admin else ICON_USER_FANCY
 
     # Session time formatting
     session_time = ""
@@ -117,8 +138,8 @@ def show_user_info_simple(user: "UserEntity") -> None:
     Args:
         user: User entity to display
     """
-    role_display = "Admin" if user.is_admin else "User"
-    icon = "😎" if user.is_admin else "👤"
+    role_display = ROLE_ADMIN_SHORT if user.is_admin else ROLE_USER_SHORT
+    icon = ICON_ADMIN_SIMPLE if user.is_admin else ICON_USER_SIMPLE
 
     st.sidebar.markdown("---")
     st.sidebar.markdown(f"{icon} **{user.nama}** ({role_display})")

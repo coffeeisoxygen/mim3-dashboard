@@ -72,6 +72,51 @@ SIDEBAR_EXPANDED: Final[bool] = True
 # Cache settings
 STREAMLIT_CACHE_TTL: Final[int] = 300  # 5 minutes
 
+# UI Component settings (Future: Make admin-configurable)
+SIDEBAR_USER_INFO_WIDTH: Final[str] = "260px"
+SIDEBAR_USER_INFO_PADDING: Final[str] = "1rem"
+SIDEBAR_USER_INFO_MIN_HEIGHT: Final[str] = "2.5rem"
+SIDEBAR_USER_INFO_BORDER_RADIUS: Final[str] = "8px"
+
+# Additional UI spacing constants
+SIDEBAR_USER_INFO_BOTTOM_MARGIN: Final[str] = "1rem"
+SIDEBAR_USER_INFO_SIDE_MARGIN: Final[str] = "1rem"
+SIDEBAR_USER_INFO_MOBILE_MARGIN: Final[str] = "0.5rem"
+SIDEBAR_USER_INFO_INTERNAL_PADDING: Final[str] = "0.75rem"
+
+# Additional UI styling constants
+SIDEBAR_USER_INFO_FONT_SIZE: Final[str] = "0.8rem"
+SIDEBAR_USER_INFO_Z_INDEX: Final[int] = 1000
+SIDEBAR_USER_INFO_LINE_HEIGHT: Final[str] = "1.3"
+
+# =============================================================================
+# 📄 PAGE CONFIGURATION CONSTANTS
+# =============================================================================
+
+# System information
+SYSTEM_VERSION: Final[str] = "0.1.0"
+DATABASE_TYPE_DISPLAY: Final[str] = "SQLite"
+
+# Password policy (displayed values)
+PASSWORD_LENGTH_MIN_DISPLAY: Final[int] = 4
+PASSWORD_LENGTH_MAX_DISPLAY: Final[int] = 20
+PASSWORD_LENGTH_DEFAULT_DISPLAY: Final[int] = 6
+
+# Session timeout options
+SESSION_TIMEOUT_OPTIONS: Final[list[str]] = [
+    "Never",
+    "1 hour",
+    "4 hours",
+    "8 hours",
+    "24 hours",
+]
+
+# Theme options
+THEME_OPTIONS: Final[list[str]] = ["Light", "Dark", "Auto"]
+
+# Default application title (for settings display)
+APP_TITLE_DEFAULT_DISPLAY: Final[str] = "Sales Dashboard"
+
 # =============================================================================
 # 🏢 BUSINESS CONSTANTS (Future: Move to database)
 # =============================================================================

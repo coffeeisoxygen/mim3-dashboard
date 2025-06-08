@@ -8,6 +8,31 @@ from __future__ import annotations
 
 import streamlit as st
 
+from sales_dashboard.config.messages import (
+    BUTTON_CREATE_USER,
+    ERROR_REQUIRED_FIELDS,
+    USER_MGMT_ACTIVITY_ADMIN,
+    USER_MGMT_ACTIVITY_AUTH,
+    USER_MGMT_ACTIVITY_INFO,
+    USER_MGMT_ACTIVITY_PASSWORD,
+    USER_MGMT_ACTIVITY_RECENT,
+    USER_MGMT_ACTIVITY_STATUS,
+    USER_MGMT_CREATE_EXPAND,
+    USER_MGMT_CREATE_HEADER,
+    USER_MGMT_EMAIL,
+    USER_MGMT_FULL_NAME,
+    USER_MGMT_GRANT_ADMIN,
+    USER_MGMT_HEADER,
+    USER_MGMT_INITIAL_PASSWORD,
+    USER_MGMT_LOGIN_INFO,
+    USER_MGMT_NO_USERS,
+    USER_MGMT_PLACEHOLDER_EMAIL,
+    USER_MGMT_PLACEHOLDER_NAME,
+    USER_MGMT_PLACEHOLDER_PASSWORD,
+    USER_MGMT_PLACEHOLDER_USERNAME,
+    USER_MGMT_USERNAME,
+    WARNING_ADMIN_PRIVILEGES,
+)
 from sales_dashboard.core.page_registry import page_registry
 from sales_dashboard.models import (
     activate_user,
@@ -23,10 +48,8 @@ def main() -> None:
 
     # 🔒 SECURITY VALIDATION: Prevents direct URL bypass
     page_config = page_registry.get_page_config("user_management")
-    user = page_config.validate_access_or_stop()  # Guaranteed admin user or st.stop()
-
-    # 🎯 Page logic - user is guaranteed valid admin
-    st.header("👥 User Management")
+    user = page_config.validate_access_or_stop()  # Guaranteed admin user or st.stop()    # 🎯 Page logic - user is guaranteed valid admin
+    st.header(USER_MGMT_HEADER)
 
     # ===== USER OVERVIEW =====
     st.subheader("📊 User Overview")
@@ -51,36 +74,42 @@ def main() -> None:
         st.metric("Active Sessions", "Real-time")
 
     # ===== CREATE NEW USER =====
-    st.subheader("➕ Create New User")
+    st.subheader(USER_MGMT_CREATE_HEADER)
 
-    with st.expander("Create New User Account", expanded=False):
+    with st.expander(USER_MGMT_CREATE_EXPAND, expanded=False):
         with st.form("create_user_form"):
             col1, col2 = st.columns(2)
 
             with col1:
-                new_nama = st.text_input("Full Name", placeholder="Enter full name")
-                new_username = st.text_input("Username", placeholder="Enter username")
-
-            with col2:
-                new_email = st.text_input("Email", placeholder="Enter email address")
-                new_password = st.text_input(
-                    "Initial Password",
-                    type="password",
-                    placeholder="Set initial password",
+                new_nama = st.text_input(
+                    USER_MGMT_FULL_NAME, placeholder=USER_MGMT_PLACEHOLDER_NAME
+                )
+                new_username = st.text_input(
+                    USER_MGMT_USERNAME, placeholder=USER_MGMT_PLACEHOLDER_USERNAME
                 )
 
-            new_is_admin = st.checkbox("Grant Administrator Privileges")
+            with col2:
+                new_email = st.text_input(
+                    USER_MGMT_EMAIL, placeholder=USER_MGMT_PLACEHOLDER_EMAIL
+                )
+                new_password = st.text_input(
+                    USER_MGMT_INITIAL_PASSWORD,
+                    type="password",
+                    placeholder=USER_MGMT_PLACEHOLDER_PASSWORD,
+                )
+
+            new_is_admin = st.checkbox(USER_MGMT_GRANT_ADMIN)
 
             if new_is_admin:
-                st.warning("⚠️ Administrator accounts have full system access")
+                st.warning(WARNING_ADMIN_PRIVILEGES)
 
             submitted = st.form_submit_button(
-                "✨ Create User", use_container_width=True
+                BUTTON_CREATE_USER, use_container_width=True
             )
 
             if submitted:
                 if not all([new_nama, new_username, new_email, new_password]):
-                    st.error("❌ Please fill in all fields")
+                    st.error(ERROR_REQUIRED_FIELDS)
                 elif len(new_password) < 6:
                     st.error("❌ Password must be at least 6 characters long")
                 else:
@@ -95,7 +124,7 @@ def main() -> None:
 
                     if new_user:
                         st.success(f"✅ User '{new_username}' created successfully!")
-                        st.info("ℹ️ The user can now log in with their credentials")
+                        st.info(USER_MGMT_LOGIN_INFO)
                         st.rerun()
                     else:
                         st.error(
@@ -155,7 +184,7 @@ def main() -> None:
                 st.divider()
 
     else:
-        st.info("No users found in the system.")
+        st.info(USER_MGMT_NO_USERS)
 
     # ===== PASSWORD RESET MODALS =====
     for u in all_users:
@@ -194,15 +223,13 @@ def main() -> None:
 
     # ===== USER ACTIVITY LOGS =====
     with st.expander("📊 User Activity Logs", expanded=False):
-        st.info(
-            "**Activity Logging**\n\nComing soon - user login/logout history, password changes, and administrative actions."
-        )
+        st.info(USER_MGMT_ACTIVITY_INFO)
 
-        st.write("**Recent Activity:**")
-        st.write("- User authentication events")
-        st.write("- Password change requests")
-        st.write("- Administrative actions")
-        st.write("- Account status changes")
+        st.write(USER_MGMT_ACTIVITY_RECENT)
+        st.write(USER_MGMT_ACTIVITY_AUTH)
+        st.write(USER_MGMT_ACTIVITY_PASSWORD)
+        st.write(USER_MGMT_ACTIVITY_ADMIN)
+        st.write(USER_MGMT_ACTIVITY_STATUS)
 
 
 # Entry point for navigation
