@@ -1,4 +1,4 @@
-"""Centralized page registry with security-first role-based access control."""
+"""Security-first page registry with bypass protection for MIM3 office tool."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ class PageCategory(str, Enum):
 
 @dataclass
 class PageConfig:
-    """Page configuration with security-first role-based access control."""
+    """Page configuration with bypass-proof security validation."""
 
     path: str
     title: str
@@ -42,7 +42,7 @@ class PageConfig:
     default: bool = False
 
     def create_page(self) -> st.Page:  # type: ignore
-        """Create Streamlit page object with correct parameter order."""
+        """Create Streamlit page object."""
         return st.Page(
             self.path,
             title=self.title,
@@ -51,7 +51,7 @@ class PageConfig:
         )
 
     def can_access(self, user: "UserEntity | None") -> bool:
-        """Check if user can access this page (for navigation filtering)."""
+        """Navigation filtering - primary security layer for UX."""
         match self.group:
             case PageGroup.PUBLIC:
                 return True
@@ -62,68 +62,63 @@ class PageConfig:
             case _:
                 return False
 
-    def require_access(self) -> "UserEntity":
-        """🔒 SECURITY-FIRST: Enforce authentication and authorization.
+    def validate_access_or_stop(self) -> "UserEntity":
+        """🔒 BYPASS PROTECTION: Validate access or stop execution.
 
-        This is the PRIMARY security enforcement point.
+        This method provides page-level security that prevents direct URL bypass.
         Every protected page MUST call this method.
 
         Returns:
             UserEntity: Authenticated and authorized user (guaranteed)
 
         Note:
-            This function will call st.stop() if access is denied.
-            The calling page can assume they have a valid user after this call.
+            Calls st.stop() if access is denied - no return on failure.
+            Calling code can safely assume they have a valid, authorized user.
         """
-        from sales_dashboard.core.auth_helper import (
-            get_current_user,
-            require_admin_access,
-            require_user_access,
-        )
+        from sales_dashboard.core.streamlit_session_manager import session_manager
 
+        # Step 1: Check session exists (prevents expired sessions)
+        user = session_manager.get_logged_in_user()
+        if not user:
+            st.error("🔒 Session expired. Please log in again.")
+            st.switch_page("ui/pages/pg_authentication.py")
+            st.stop()
+
+        # Step 2: Check account is active (prevents deactivated accounts)
+        if not user.is_active:
+            st.error("🚫 Account tidak aktif. Hubungi administrator.")
+            st.switch_page("ui/pages/pg_authentication.py")
+            st.stop()
+
+        # Step 3: Check role-based access (prevents privilege escalation)
         match self.group:
             case PageGroup.PUBLIC:
-                # Public pages don't require authentication, but if require_access() is called,
-                # we should return current user or None - but this method promises UserEntity
-                # So for public pages calling require_access(), we ensure there's a user
-                user = get_current_user()
-                if user is None:
-                    st.error(
-                        "🔒 Halaman ini memerlukan login. Silakan login terlebih dahulu."
-                    )
-                    st.switch_page("ui/pages/pg_authentication.py")
-                    st.stop()
-                return user  # Now guaranteed to be UserEntity
+                # Public pages allow any authenticated user
+                return user
 
             case PageGroup.GLOBAL:
-                # All logged-in users can access
-                user = require_user_access()  # Guaranteed UserEntity or st.stop()
-                if not user.is_active:
-                    st.error("🚫 Account tidak aktif. Hubungi administrator.")
-                    st.switch_page("ui/pages/pg_authentication.py")
-                    st.stop()
+                # All active users can access
                 return user
 
             case PageGroup.ADMIN_ONLY:
-                # Only admin users can access
-                user = (
-                    require_admin_access()
-                )  # Guaranteed admin UserEntity or st.stop()
-                if not user.is_active:
-                    st.error("🚫 Account tidak aktif. Hubungi administrator.")
-                    st.switch_page("ui/pages/pg_authentication.py")
+                # Only admin users can access - BYPASS PROTECTION
+                if not user.is_admin:
+                    st.error(
+                        "❌ Anda tidak memiliki akses administrator untuk halaman ini."
+                    )
+                    st.switch_page("ui/pages/pg_dashboard.py")  # Redirect to safe page
                     st.stop()
                 return user
 
             case _:
                 # Unknown page group - deny access
-                st.error("❌ Akses tidak diizinkan untuk halaman ini")
-                st.switch_page("ui/pages/pg_authentication.py")
+                st.error("❌ Halaman tidak ditemukan.")
+                st.switch_page("ui/pages/pg_dashboard.py")
                 st.stop()
 
 
 class PageRegistry:
-    """🔒 Security-first centralized registry for all pages with role-based access."""
+    """🔒 Security-first page registry for MIM3 office tool."""
 
     # All page configurations - easy to extend for new pages
     _PAGES = {
@@ -152,7 +147,7 @@ class PageRegistry:
             group=PageGroup.GLOBAL,
             category=PageCategory.REPORTS,
             default=True,
-            description="Main dashboard",
+            description="Main dashboard with key metrics",
         ),
         "hpp_calculator": PageConfig(
             path="ui/pages/pg_hpp_calculator.py",
@@ -205,17 +200,25 @@ class PageRegistry:
         ]
 
     @classmethod
-    def get_accessible_pages(cls, user: "UserEntity | None") -> dict[str, st.Page]:  # type: ignore
-        """🔒 Get all pages accessible to user for navigation (security filtering)."""
-        return {
-            name: config.create_page()
-            for name, config in cls._PAGES.items()
-            if config.can_access(user)
-        }
+    def get_admin_pages(cls, user: "UserEntity") -> list[st.Page]:  # type: ignore
+        """Get admin-only pages if user is admin."""
+        if not user.is_admin:
+            return []
+        return [
+            config.create_page()
+            for config in cls._PAGES.values()
+            if config.group == PageGroup.ADMIN_ONLY
+        ]
 
     @classmethod
     def get_page_config(cls, page_name: str) -> PageConfig:
-        """Get page configuration by name.
+        """Get page configuration by name for security validation.
+
+        Args:
+            page_name: Name of the page in registry
+
+        Returns:
+            PageConfig: Configuration for the requested page
 
         Raises:
             KeyError: If page is not found in registry
@@ -226,28 +229,18 @@ class PageRegistry:
 
     @classmethod
     def add_page(cls, name: str, config: PageConfig) -> None:
-        """🆕 Add new page to registry (for future extensibility)."""
+        """🆕 Easy page addition - just add to registry.
+
+        Args:
+            name: Unique name for the page
+            config: Page configuration with security settings
+        """
         cls._PAGES[name] = config
 
     @classmethod
     def get_all_pages(cls) -> dict[str, PageConfig]:
         """Get all registered pages (for admin/debugging purposes)."""
         return cls._PAGES.copy()
-
-    @classmethod
-    def get_admin_pages(cls, user: "UserEntity") -> list[st.Page]:  # type: ignore
-        """Get admin-only pages if user is admin.
-
-        Args:
-            user: User entity to check admin status
-
-        Returns:
-            List of admin pages if user is admin, empty list otherwise
-        """
-        if not user.is_admin:
-            return []
-
-        return cls.get_pages_by_group(PageGroup.ADMIN_ONLY, user)
 
 
 # Global registry instance

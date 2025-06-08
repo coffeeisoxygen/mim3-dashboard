@@ -1,124 +1,124 @@
-"""Authentication helper functions for page access control."""
+# """Authentication helper functions for page access control."""
 
-from __future__ import annotations
+# from __future__ import annotations
 
-from functools import wraps
-from typing import TYPE_CHECKING, Callable, Optional, TypeVar, cast
+# from functools import wraps
+# from typing import TYPE_CHECKING, Callable, Optional, TypeVar, cast
 
-from loguru import logger
-import streamlit as st
+# from loguru import logger
+# import streamlit as st
 
-from sales_dashboard.core.streamlit_session_manager import session_manager
+# from sales_dashboard.core.streamlit_session_manager import session_manager
 
-if TYPE_CHECKING:
-    from sales_dashboard.infrastructure.db_entities import UserEntity
+# if TYPE_CHECKING:
+#     from sales_dashboard.infrastructure.db_entities import UserEntity
 
-F = TypeVar("F", bound=Callable[..., None])
-
-
-def require_login(func: F) -> F:
-    """Decorator to require user login for page access."""
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        user = session_manager.get_logged_in_user()
-        if not user:
-            st.error("🔒 Silakan login terlebih dahulu untuk mengakses halaman ini.")
-            st.switch_page("ui/pages/pg_authentication.py")
-            st.stop()
-            return
-
-        # Store validated user in session for page use
-        st.session_state.validated_user = user
-        return func(*args, **kwargs)
-
-    return cast(F, wrapper)
+# F = TypeVar("F", bound=Callable[..., None])
 
 
-def require_admin(func: F) -> F:
-    """Decorator to require admin access for page."""
+# def require_login(func: F) -> F:
+#     """Decorator to require user login for page access."""
 
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        user = session_manager.get_logged_in_user()
-        if not user:
-            st.error("🔒 Silakan login terlebih dahulu untuk mengakses halaman ini.")
-            st.switch_page("ui/pages/pg_authentication.py")
-            st.stop()
-            return
+#     @wraps(func)
+#     def wrapper(*args, **kwargs):
+#         user = session_manager.get_logged_in_user()
+#         if not user:
+#             st.error("🔒 Silakan login terlebih dahulu untuk mengakses halaman ini.")
+#             st.switch_page("ui/pages/pg_authentication.py")
+#             st.stop()
+#             return
 
-        if not user.is_admin:
-            st.error("❌ Anda tidak memiliki akses administrator untuk halaman ini.")
-            logger.warning(f"Non-admin user {user.username} attempted admin access")
-            st.switch_page("ui/pages/pg_authentication.py")
-            st.stop()
-            return
+#         # Store validated user in session for page use
+#         st.session_state.validated_user = user
+#         return func(*args, **kwargs)
 
-        # Store validated admin user in session for page use
-        st.session_state.validated_user = user
-        return func(*args, **kwargs)
-
-    return cast(F, wrapper)
+#     return cast(F, wrapper)
 
 
-def require_user_access() -> "UserEntity":
-    """Require user to be logged in. Returns user or stops execution.
+# def require_admin(func: F) -> F:
+#     """Decorator to require admin access for page."""
 
-    Returns:
-        UserEntity: Authenticated user (guaranteed)
+#     @wraps(func)
+#     def wrapper(*args, **kwargs):
+#         user = session_manager.get_logged_in_user()
+#         if not user:
+#             st.error("🔒 Silakan login terlebih dahulu untuk mengakses halaman ini.")
+#             st.switch_page("ui/pages/pg_authentication.py")
+#             st.stop()
+#             return
 
-    Note:
-        This function will call st.stop() if user is not authenticated.
-        The calling code can assume a valid user after this call.
-    """
-    # Check for session timeout first
-    if session_manager.check_and_handle_session_timeout():
-        st.error("🕐 Session telah berakhir. Silakan login kembali.")
-        st.switch_page("ui/pages/pg_authentication.py")
-        st.stop()
+#         if not user.is_admin:
+#             st.error("❌ Anda tidak memiliki akses administrator untuk halaman ini.")
+#             logger.warning(f"Non-admin user {user.username} attempted admin access")
+#             st.switch_page("ui/pages/pg_authentication.py")
+#             st.stop()
+#             return
 
-    user = session_manager.get_logged_in_user()
-    if not user:
-        st.error("🔒 Silakan login terlebih dahulu untuk mengakses halaman ini.")
-        st.switch_page("ui/pages/pg_authentication.py")
-        st.stop()
+#         # Store validated admin user in session for page use
+#         st.session_state.validated_user = user
+#         return func(*args, **kwargs)
 
-    # At this point, user is guaranteed to be UserEntity
-    return user
-
-
-def require_admin_access() -> "UserEntity":
-    """Require user to be logged in as admin. Returns user or stops execution.
-
-    Returns:
-        UserEntity: Authenticated admin user (guaranteed)
-
-    Note:
-        This function will call st.stop() if user is not authenticated or not admin.
-        The calling code can assume a valid admin user after this call.
-    """
-    user = require_user_access()  # This guarantees a UserEntity
-
-    if not user.is_admin:
-        st.error("❌ Anda tidak memiliki akses administrator untuk halaman ini.")
-        logger.warning(f"Non-admin user {user.username} attempted admin access")
-        st.switch_page("ui/pages/pg_authentication.py")
-        st.stop()
-
-    return user
+#     return cast(F, wrapper)
 
 
-def get_current_user() -> Optional["UserEntity"]:
-    """Get current logged in user without requiring access."""
-    return session_manager.get_logged_in_user()
+# def require_user_access() -> "UserEntity":
+#     """Require user to be logged in. Returns user or stops execution.
+
+#     Returns:
+#         UserEntity: Authenticated user (guaranteed)
+
+#     Note:
+#         This function will call st.stop() if user is not authenticated.
+#         The calling code can assume a valid user after this call.
+#     """
+#     # Check for session timeout first
+#     if session_manager.check_and_handle_session_timeout():
+#         st.error("🕐 Session telah berakhir. Silakan login kembali.")
+#         st.switch_page("ui/pages/pg_authentication.py")
+#         st.stop()
+
+#     user = session_manager.get_logged_in_user()
+#     if not user:
+#         st.error("🔒 Silakan login terlebih dahulu untuk mengakses halaman ini.")
+#         st.switch_page("ui/pages/pg_authentication.py")
+#         st.stop()
+
+#     # At this point, user is guaranteed to be UserEntity
+#     return user
 
 
-def is_logged_in() -> bool:
-    """Check if user is currently logged in."""
-    return session_manager.get_logged_in_user() is not None
+# def require_admin_access() -> "UserEntity":
+#     """Require user to be logged in as admin. Returns user or stops execution.
+
+#     Returns:
+#         UserEntity: Authenticated admin user (guaranteed)
+
+#     Note:
+#         This function will call st.stop() if user is not authenticated or not admin.
+#         The calling code can assume a valid admin user after this call.
+#     """
+#     user = require_user_access()  # This guarantees a UserEntity
+
+#     if not user.is_admin:
+#         st.error("❌ Anda tidak memiliki akses administrator untuk halaman ini.")
+#         logger.warning(f"Non-admin user {user.username} attempted admin access")
+#         st.switch_page("ui/pages/pg_authentication.py")
+#         st.stop()
+
+#     return user
 
 
-def is_admin() -> bool:
-    """Check if current user is admin."""
-    user = session_manager.get_logged_in_user()
-    return user is not None and user.is_admin
+# def get_current_user() -> Optional["UserEntity"]:
+#     """Get current logged in user without requiring access."""
+#     return session_manager.get_logged_in_user()
+
+
+# def is_logged_in() -> bool:
+#     """Check if user is currently logged in."""
+#     return session_manager.get_logged_in_user() is not None
+
+
+# def is_admin() -> bool:
+#     """Check if current user is admin."""
+#     user = session_manager.get_logged_in_user()
+#     return user is not None and user.is_admin

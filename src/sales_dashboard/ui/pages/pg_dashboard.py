@@ -1,6 +1,7 @@
 """Dashboard Page - Main overview and key metrics.
 
-🔒 SECURITY: Available to all authenticated users.
+🔒 SECURITY: Available to all authenticated users (GLOBAL access).
+🛡️ BYPASS PROTECTION: Direct URL access is validated and blocked if unauthorized.
 """
 
 from __future__ import annotations
@@ -11,19 +12,18 @@ from sales_dashboard.core.page_registry import page_registry
 
 
 def main() -> None:
-    """Dashboard page with security-first authentication."""
+    """Dashboard page with bypass-proof security."""
 
-    # 🔒 SECURITY CHECKPOINT - Primary security enforcement
+    # 🔒 SECURITY VALIDATION: Prevents direct URL bypass
     page_config = page_registry.get_page_config("dashboard")
-    user = page_config.require_access()  # Guaranteed user or st.stop()
+    user = page_config.validate_access_or_stop()  # Guaranteed user or st.stop()
 
-    # 🎯 Page logic - user is guaranteed to be valid and authorized
+    # 🎯 Page logic - user is guaranteed valid and authorized
     st.header(f"📊 Dashboard - Welcome, {user.nama}")
 
     # ===== KEY METRICS OVERVIEW =====
     st.subheader("📈 Key Metrics")
 
-    # Placeholder metrics - will be replaced with real data later
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
@@ -41,17 +41,14 @@ def main() -> None:
     # ===== ROLE-BASED FEATURES =====
     st.subheader("📋 Quick Actions")
 
-    # 🔐 Role-based UI - user is guaranteed to exist
+    # 🔐 Role-based UI - user guaranteed valid by security validation
     if user.is_admin:
         st.success("🔐 **Admin View** - Full system access")
 
-        # Admin-specific quick actions
         col1, col2 = st.columns(2)
-
         with col1:
             if st.button("👥 Manage Users", use_container_width=True):
                 st.switch_page("ui/pages/admin/pg_users_management.py")
-
         with col2:
             if st.button("⚙️ System Settings", use_container_width=True):
                 st.switch_page("ui/pages/admin/pg_sys_settings.py")

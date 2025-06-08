@@ -82,3 +82,6 @@ if __name__ == "__main__":
     main()
 else:
     main()
+
+
+# TODO: Merubah Sistem Hardcoded menjadi editabel loadable oleh admin , lakukan ini di akhir masa development
