@@ -10,12 +10,19 @@ from typing import TYPE_CHECKING, Any, Optional
 from loguru import logger
 import streamlit as st
 
+from sales_dashboard.config.constant import (
+    SESSION_CACHE_TTL_MINUTES,
+    SESSION_FILE,
+    SESSION_TIMEOUT_HOURS,
+    USER_CACHE_TTL_MINUTES,
+)
+
 if TYPE_CHECKING:
     from sales_dashboard.infrastructure.db_entities import UserEntity
 
 
 # Global cache functions for better performance
-@st.cache_data(ttl=60)  # Cache for 1 minute
+@st.cache_data(ttl=SESSION_CACHE_TTL_MINUTES * 60)  # Convert minutes to seconds
 def _load_session_file(session_file_path: str) -> dict[str, Any] | None:
     """Load session data from file with caching for performance."""
     try:
@@ -34,7 +41,7 @@ def _load_session_file(session_file_path: str) -> dict[str, Any] | None:
         return None
 
 
-@st.cache_data(ttl=120)  # Cache user lookup for 2 minutes
+@st.cache_data(ttl=USER_CACHE_TTL_MINUTES * 60)  # Convert minutes to seconds
 def _get_user_from_database(user_id: int) -> "UserEntity | None":
     """Get user from database with caching."""
     try:
@@ -51,9 +58,6 @@ def _get_user_from_database(user_id: int) -> "UserEntity | None":
 
 class StreamlitSessionManager:
     """Manages session state using Streamlit native patterns with optimized caching."""
-
-    SESSION_TIMEOUT_HOURS = 8
-    SESSION_FILE = Path(".streamlit_session")
 
     def init_session_state(self) -> None:
         """Initialize session state with proper restoration order."""
@@ -74,7 +78,7 @@ class StreamlitSessionManager:
             st.session_state.login_time = None
             logger.debug("Session state initialized with defaults")
         else:
-            # ✅ Only log successful restoration once per browser session
+            # Only log successful restoration once per browser session
             if not st.session_state.get("restoration_logged", False):
                 logger.info("Session state restored from cache")
                 st.session_state.restoration_logged = True
@@ -85,7 +89,7 @@ class StreamlitSessionManager:
         """Try to restore session from file. Returns True if successful."""
         try:
             # Use cached session data (major performance improvement)
-            session_data = _load_session_file(str(self.SESSION_FILE))
+            session_data = _load_session_file(str(SESSION_FILE))
             if not session_data:
                 return False
 
@@ -123,7 +127,7 @@ class StreamlitSessionManager:
             if login_time_str:
                 login_time = datetime.fromisoformat(login_time_str)
                 age = datetime.now() - login_time
-                if age > timedelta(hours=self.SESSION_TIMEOUT_HOURS):
+                if age > timedelta(hours=SESSION_TIMEOUT_HOURS):
                     logger.debug(f"Session too old: {age}")
                     return False
 
@@ -161,7 +165,7 @@ class StreamlitSessionManager:
                 session_data["login_time"]
             )
 
-            # ✅ Only log restoration once per browser session, not on every navigation
+            # Only log restoration once per browser session, not on every navigation
             if not st.session_state.get("user_restoration_logged", False):
                 logger.info(f"Session restored for user {user.username}")
                 st.session_state.user_restoration_logged = True
@@ -175,7 +179,7 @@ class StreamlitSessionManager:
     def _clear_session_caches(self) -> None:
         """Clear session-related caches using proper Streamlit methods."""
         try:
-            # ✅ Correct way to clear all cache data in Streamlit
+            # Correct way to clear all cache data in Streamlit
             st.cache_data.clear()
             logger.debug("Session caches cleared")
         except Exception as e:
@@ -187,7 +191,7 @@ class StreamlitSessionManager:
         st.session_state.logged_in = True
         st.session_state.login_time = datetime.now()
 
-        # ✅ Reset restoration logging flags for new session
+        # Reset restoration logging flags for new session
         st.session_state.restoration_logged = False
         st.session_state.user_restoration_logged = False
 
@@ -208,7 +212,7 @@ class StreamlitSessionManager:
         st.session_state.user = None
         st.session_state.login_time = None
 
-        # ✅ Reset restoration logging flags
+        # Reset restoration logging flags
         st.session_state.restoration_logged = False
         st.session_state.user_restoration_logged = False
 
@@ -230,14 +234,14 @@ class StreamlitSessionManager:
                 "login_time": datetime.now().isoformat(),
                 "last_activity": datetime.now().isoformat(),
                 "expires_at": (
-                    datetime.now() + timedelta(hours=self.SESSION_TIMEOUT_HOURS)
+                    datetime.now() + timedelta(hours=SESSION_TIMEOUT_HOURS)
                 ).isoformat(),
             }
 
-            with open(self.SESSION_FILE, "w", encoding="utf-8") as f:
+            with open(SESSION_FILE, "w", encoding="utf-8") as f:
                 json.dump(session_data, f, indent=2)
 
-            # ✅ Clear cache after file update - correct approach
+            # Clear cache after file update - correct approach
             st.cache_data.clear()
             logger.debug(f"Session saved for user {user.username}")
 
@@ -247,8 +251,8 @@ class StreamlitSessionManager:
     def _cleanup_session_file(self) -> None:
         """Clean up session file."""
         try:
-            if self.SESSION_FILE.exists():
-                self.SESSION_FILE.unlink()
+            if SESSION_FILE.exists():
+                SESSION_FILE.unlink()
                 logger.debug("Session file cleaned up")
         except Exception as e:
             logger.warning(f"Failed to cleanup session file: {e}")
@@ -263,7 +267,7 @@ class StreamlitSessionManager:
             return False
 
         session_age = datetime.now() - login_time
-        is_expired = session_age > timedelta(hours=self.SESSION_TIMEOUT_HOURS)
+        is_expired = session_age > timedelta(hours=SESSION_TIMEOUT_HOURS)
 
         if is_expired:
             self.logout_user()

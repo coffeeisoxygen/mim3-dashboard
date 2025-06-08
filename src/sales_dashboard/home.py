@@ -6,6 +6,12 @@ from typing import TYPE_CHECKING
 
 import streamlit as st
 
+from sales_dashboard.config.constant import (
+    APP_ICON,
+    APP_LAYOUT,
+    APP_TITLE,
+    SIDEBAR_EXPANDED,
+)
 from sales_dashboard.core.app_bootstrap import bootstrap_application
 from sales_dashboard.core.page_registry import PageGroup, page_registry
 from sales_dashboard.core.streamlit_session_manager import session_manager
@@ -16,10 +22,10 @@ if TYPE_CHECKING:
 
 
 st.set_page_config(
-    page_title="SDP IM3 Report System",
-    page_icon="📊",
-    layout="wide",
-    initial_sidebar_state="expanded",
+    page_title=APP_TITLE,
+    page_icon=APP_ICON,
+    layout=APP_LAYOUT,
+    initial_sidebar_state="expanded" if SIDEBAR_EXPANDED else "collapsed",
 )
 
 # =============================================================================
@@ -74,7 +80,6 @@ def main() -> None:
                 "Reports": report_pages,
             })
 
-    # Run the selected page
     pg.run()
 
 

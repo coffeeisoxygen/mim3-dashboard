@@ -75,18 +75,24 @@ class PageConfig:
             Calls st.stop() if access is denied - no return on failure.
             Calling code can safely assume they have a valid, authorized user.
         """
+        from sales_dashboard.config.messages import (
+            ERROR_ACCESS_DENIED,
+            ERROR_ACCOUNT_INACTIVE,
+            ERROR_PAGE_NOT_FOUND,
+            ERROR_SESSION_EXPIRED,
+        )
         from sales_dashboard.core.streamlit_session_manager import session_manager
 
         # Step 1: Check session exists (prevents expired sessions)
         user = session_manager.get_logged_in_user()
         if not user:
-            st.error("🔒 Session expired. Please log in again.")
+            st.error(ERROR_SESSION_EXPIRED)
             st.switch_page("ui/pages/pg_authentication.py")
             st.stop()
 
         # Step 2: Check account is active (prevents deactivated accounts)
         if not user.is_active:
-            st.error("🚫 Account tidak aktif. Hubungi administrator.")
+            st.error(ERROR_ACCOUNT_INACTIVE)
             st.switch_page("ui/pages/pg_authentication.py")
             st.stop()
 
@@ -103,16 +109,14 @@ class PageConfig:
             case PageGroup.ADMIN_ONLY:
                 # Only admin users can access - BYPASS PROTECTION
                 if not user.is_admin:
-                    st.error(
-                        "❌ Anda tidak memiliki akses administrator untuk halaman ini."
-                    )
+                    st.error(ERROR_ACCESS_DENIED)
                     st.switch_page("ui/pages/pg_dashboard.py")  # Redirect to safe page
                     st.stop()
                 return user
 
             case _:
                 # Unknown page group - deny access
-                st.error("❌ Halaman tidak ditemukan.")
+                st.error(ERROR_PAGE_NOT_FOUND)
                 st.switch_page("ui/pages/pg_dashboard.py")
                 st.stop()
 

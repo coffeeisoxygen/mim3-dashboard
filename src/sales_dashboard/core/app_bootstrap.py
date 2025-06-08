@@ -5,6 +5,7 @@ from __future__ import annotations
 from loguru import logger
 import streamlit as st
 
+from sales_dashboard.config.constant import DEBUG_MODE
 from sales_dashboard.infrastructure.db_engine import ensure_database_ready
 from sales_dashboard.utils.log_setup import setup_logging
 
@@ -13,10 +14,8 @@ from sales_dashboard.utils.log_setup import setup_logging
 def initialize_application() -> bool:
     """One-time application initialization - Streamlit native caching."""
     try:
-        logger.info("🚀 Starting application initialization...")
-
-        # Setup logging once
-        setup_logging(debug=True)
+        logger.info("🚀 Starting application initialization...")  # Setup logging once
+        setup_logging(debug=DEBUG_MODE)
 
         # Initialize database (already cached)
         ensure_database_ready()

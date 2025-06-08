@@ -10,11 +10,20 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 import streamlit as st
 
+from sales_dashboard.config.constant import (
+    DATA_DIR,
+    DATABASE_URL,
+    DB_POOL_RECYCLE_HOURS,
+    DB_TIMEOUT_SECONDS,
+    DEFAULT_ADMIN_EMAIL,
+    DEFAULT_ADMIN_NAME,
+    DEFAULT_ADMIN_PASSWORD,
+    DEFAULT_ADMIN_USERNAME,
+)
 from sales_dashboard.utils.hasher import get_password_hasher
 
-DATA_DIR = Path("data")
+# Ensure data directory exists
 DATA_DIR.mkdir(exist_ok=True)
-DATABASE_URL = f"sqlite:///{DATA_DIR}/sales_dashboard.db"
 
 if TYPE_CHECKING:
     from sqlalchemy import Engine
@@ -31,15 +40,15 @@ def get_database_engine() -> Engine:
         db_path = Path(DATABASE_URL.replace("sqlite:///", ""))
         db_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Create engine with simple configuration
+        # Create engine with configuration from constants
         engine = create_engine(
             DATABASE_URL,
             echo=False,  # Set True for SQL debugging
             pool_pre_ping=True,
-            pool_recycle=3600,  # 1 hour
+            pool_recycle=DB_POOL_RECYCLE_HOURS * 3600,  # Convert hours to seconds
             connect_args={
                 "check_same_thread": False,  # SQLite threading
-                "timeout": 30,
+                "timeout": DB_TIMEOUT_SECONDS,
             },
         )
 
@@ -205,7 +214,9 @@ def _ensure_seed_data_ready() -> None:
         with get_db_session() as session:
             # Check admin existence
             admin = (
-                session.query(UserEntity).filter(UserEntity.username == "admin").first()
+                session.query(UserEntity)
+                .filter(UserEntity.username == DEFAULT_ADMIN_USERNAME)
+                .first()
             )
 
             if admin:
@@ -265,12 +276,12 @@ def _create_default_admin_user(session: Session) -> None:
 
     try:
         hasher = get_password_hasher()
-        hashed_password = hasher.hash_password("admin123")
+        hashed_password = hasher.hash_password(DEFAULT_ADMIN_PASSWORD)
 
         admin_user = UserEntity(
-            nama="Administrator",
-            email="admin@dashboard.com",
-            username="admin",
+            nama=DEFAULT_ADMIN_NAME,
+            email=DEFAULT_ADMIN_EMAIL,
+            username=DEFAULT_ADMIN_USERNAME,
             password=hashed_password,
             is_admin=True,
             is_active=True,
@@ -278,7 +289,7 @@ def _create_default_admin_user(session: Session) -> None:
 
         session.add(admin_user)
         logger.info(
-            "👑 Default credentials created: username='admin', password='admin123'"
+            f"👑 Default credentials created: username='{DEFAULT_ADMIN_USERNAME}', password='{DEFAULT_ADMIN_PASSWORD}'"
         )
 
     except Exception as e:
@@ -296,7 +307,9 @@ def create_default_admin() -> bool:
         with get_db_session() as session:
             # Check if admin already exists
             admin = (
-                session.query(UserEntity).filter(UserEntity.username == "admin").first()
+                session.query(UserEntity)
+                .filter(UserEntity.username == DEFAULT_ADMIN_USERNAME)
+                .first()
             )
 
             if admin:
