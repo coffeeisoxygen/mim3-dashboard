@@ -7,37 +7,43 @@ import streamlit as st
 
 from sales_dashboard.core.streamlit_session_manager import session_manager
 from sales_dashboard.models.user_operations import authenticate_user
-from sales_dashboard.ui.ui_config import ICONS
+
+
+def main() -> None:
+    """Main authentication page - native Streamlit approach.
+
+    Note: No st.set_page_config() when used with official navigation.
+    Page config is handled by the main app (home.py).
+    """
+    show_login_page()
 
 
 def show_login_page() -> None:
-    """Clean login page inspired by Google/GitHub.
-
-    Note: This page doesn't use auth wrappers because it IS the auth solution.
-    """
+    """Clean login page inspired by Google/GitHub."""
     # Center the form with columns
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
         # Simple welcome message
-        st.markdown("## Welcome")  # Clean and simple
-        st.markdown("")  # Simple spacing
+        st.markdown("## Welcome")
+        st.markdown("")
 
         # The login form
         _render_clean_login_form()
 
 
-@st.fragment
 def _render_clean_login_form() -> None:
-    """Clean login form - Google/GitHub style."""
-    # Check if already logged in - use Streamlit native session state
+    """Clean login form - Google/GitHub style.
+
+    Removed @st.fragment to avoid duplicate form key issues.
+    """
+    # Check if already logged in
     if st.session_state.get("logged_in", False):
         st.success("✅ Login successful! Redirecting...")
-        st.rerun()
+        # Navigation will handle this automatically
         return
 
     with st.form("login_form", clear_on_submit=False):
-        # Clean input fields
         username = st.text_input(
             "Username", placeholder="Enter your username", key="auth_username"
         )
@@ -49,9 +55,8 @@ def _render_clean_login_form() -> None:
             key="auth_password",
         )
 
-        # Clean submit button
         submitted = st.form_submit_button(
-            "Sign In", type="primary", icon=ICONS.LOGIN, use_container_width=True
+            "🔐 Sign In", type="primary", use_container_width=True
         )
 
         if submitted:
@@ -60,25 +65,20 @@ def _render_clean_login_form() -> None:
 
 def _handle_login(username: str, password: str) -> None:
     """Handle login with clean UX and proper error handling."""
-    # Simple validation
     if not username or not password:
         st.error("Please enter both username and password")
         return
 
-    # Clean loading with proper error boundaries
     with st.spinner("Signing in..."):
         try:
             user = authenticate_user(username, password)
 
             if user:
-                # Use session manager for login with persistence
                 session_manager.login_user(user, remember=True)
-
-                # Simple success message
                 st.success(f"Welcome, {user.nama}!")
+                # Let navigation handle the redirect automatically
                 st.rerun()
             else:
-                # Clean error - user-friendly for MIM3 office
                 st.error("❌ Username atau password salah")
                 logger.warning(f"Failed login attempt for username: {username}")
 
@@ -87,15 +87,5 @@ def _handle_login(username: str, password: str) -> None:
             st.error("❌ Gagal masuk. Silakan coba lagi atau hubungi administrator.")
 
 
-def handle_logout() -> None:
-    """Clean logout - delegates to session manager."""
-    try:
-        session_manager.logout_user()
-        st.success("👋 Anda telah keluar. Terima kasih!")
-        st.rerun()
-    except Exception as e:
-        logger.error(f"Logout error: {e}")
-        # Still logout even if there's an error - fail-safe approach
-        st.session_state.logged_in = False
-        st.session_state.user = None
-        st.rerun()
+# Entry point for navigation
+main()

@@ -86,7 +86,7 @@ def _render_user_info_content(user: "UserEntity") -> None:
     """
     # Role-based display
     role_display = "Admin" if user.is_admin else "User"
-    icon = "😎" if user.is_admin else "👤"
+    icon = "😎" if user.is_admin else "🤓"
 
     # Session time formatting
     session_time = ""
@@ -99,7 +99,8 @@ def _render_user_info_content(user: "UserEntity") -> None:
         f"""
         <div class="user-info-bottom">
             <div class="user-text">
-                {icon} <strong>{user.nama}</strong> ({role_display}){session_time}
+                {icon}<strong>{user.nama}</strong>
+                ({role_display}){session_time}
             </div>
         </div>
         """,
