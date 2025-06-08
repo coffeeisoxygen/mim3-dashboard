@@ -53,3 +53,4 @@ src/sales_dashboard/_version.py
 
 .sample/
 .streamlit_session
+copilot-instructions.md
