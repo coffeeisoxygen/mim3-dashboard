@@ -8,6 +8,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import hashlib
 
+from sales_dashboard.config.constant import SIMPLE_HASH_SALT
+from sales_dashboard.config.messages import ERROR_BCRYPT_NOT_AVAILABLE
+
 try:
     import bcrypt
 
@@ -36,8 +39,7 @@ class SimpleHasher(PasswordHasher):
 
     def hash_password(self, password: str) -> str:
         """Hash password using SHA256 with salt"""
-        salt = "sales_dashboard_salt"  # In production, use random salt per user
-        return hashlib.sha256(f"{password}{salt}".encode()).hexdigest()
+        return hashlib.sha256(f"{password}{SIMPLE_HASH_SALT}".encode()).hexdigest()
 
     def verify_password(self, password: str, hashed: str) -> bool:
         """Verify password against hash"""
@@ -50,13 +52,13 @@ class BcryptHasher(PasswordHasher):
     def hash_password(self, password: str) -> str:
         """Hash password using bcrypt"""
         if not BCRYPT_AVAILABLE or bcrypt is None:
-            raise RuntimeError("bcrypt not available")
+            raise RuntimeError(ERROR_BCRYPT_NOT_AVAILABLE)
         return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
     def verify_password(self, password: str, hashed: str) -> bool:
         """Verify password against bcrypt hash"""
         if not BCRYPT_AVAILABLE or bcrypt is None:
-            raise RuntimeError("bcrypt not available")
+            raise RuntimeError(ERROR_BCRYPT_NOT_AVAILABLE)
         return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
 
 

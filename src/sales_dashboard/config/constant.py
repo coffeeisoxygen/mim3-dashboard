@@ -48,6 +48,11 @@ PASSWORD_REQUIRE_SPECIAL: Final[bool] = False
 MAX_LOGIN_ATTEMPTS: Final[int] = 5
 LOCKOUT_DURATION_MINUTES: Final[int] = 15
 
+# Password hashing (Future: Make admin-configurable)
+SIMPLE_HASH_SALT: Final[str] = "sales_dashboard_salt"  # Development only
+BCRYPT_DEFAULT_ROUNDS: Final[int] = 12
+USE_BCRYPT_DEFAULT: Final[bool] = True
+
 # Session management
 SESSION_TIMEOUT_HOURS: Final[int] = 8
 SESSION_CACHE_TTL_MINUTES: Final[int] = 2
@@ -143,11 +148,14 @@ REPORT_TYPES: Final[list[str]] = [
 # 🚀 DEVELOPMENT & LOGGING
 # =============================================================================
 
-# Logging
+# Logging configuration (Future: Make admin-configurable)
 LOG_LEVEL_DEBUG: Final[str] = "DEBUG"
 LOG_LEVEL_INFO: Final[str] = "INFO"
 LOG_ROTATION_SIZE: Final[str] = "1 MB"
 LOG_RETENTION_DAYS: Final[str] = "7 days"
+LOG_COMPRESSION: Final[str] = "zip"
+LOG_DIRECTORY: Final[str] = "logs"
+LOG_FILENAME: Final[str] = "sdp_dashboard.log"
 
 # Environment detection
 DEBUG_MODE: Final[bool] = True  # TODO: Read from environment

@@ -11,6 +11,22 @@ from typing import TYPE_CHECKING
 from loguru import logger
 import streamlit as st
 
+from sales_dashboard.config.constant import (
+    LOG_COMPRESSION,
+    LOG_DIRECTORY,
+    LOG_FILENAME,
+    LOG_LEVEL_DEBUG,
+    LOG_RETENTION_DAYS,
+    LOG_ROTATION_SIZE,
+)
+from sales_dashboard.config.messages import (
+    LOG_ALREADY_INITIALIZED,
+    LOG_DEBUG_ENABLED,
+    LOG_PRODUCTION_ENABLED,
+    LOG_SETUP_COMPLETE,
+    LOG_STARTING_INITIALIZATION,
+)
+
 if TYPE_CHECKING:
     pass
 
@@ -43,11 +59,11 @@ def setup_logging(debug: bool = True) -> None:
 
     # Check if already initialized this session
     if st.session_state.get("logging_initialized", False):
-        logger.debug("Logging already initialized this session - skipping")
+        logger.debug(LOG_ALREADY_INITIALIZED)
         return
 
     try:
-        logger.info("Starting logging initialization...")
+        logger.info(LOG_STARTING_INITIALIZATION)
 
         # CRITICAL: Remove existing handlers first
         root_logger = logging.getLogger()
@@ -69,30 +85,30 @@ def setup_logging(debug: bool = True) -> None:
             # Debug mode: Console output with colors
             logger.add(
                 sys.stderr,
-                level="DEBUG",
+                level=LOG_LEVEL_DEBUG,
                 format=log_format,
                 diagnose=True,
                 colorize=True,
                 backtrace=True,
             )
-            logger.info("Debug logging enabled (console output via Loguru)")
+            logger.info(LOG_DEBUG_ENABLED)
         else:
             # Production mode: File output
-            Path("logs").mkdir(parents=True, exist_ok=True)
+            Path(LOG_DIRECTORY).mkdir(parents=True, exist_ok=True)
             logger.add(
-                "logs/sdp_dashboard.log",
-                rotation="1 MB",
-                retention="7 days",
+                f"{LOG_DIRECTORY}/{LOG_FILENAME}",
+                rotation=LOG_ROTATION_SIZE,
+                retention=LOG_RETENTION_DAYS,
                 level="INFO",
                 format=log_format,
                 diagnose=True,
                 enqueue=True,
                 backtrace=True,
                 catch=True,
-                compression="zip",
+                compression=LOG_COMPRESSION,
                 serialize=False,
             )
-            logger.info("Production logging enabled (file output via Loguru)")
+            logger.info(LOG_PRODUCTION_ENABLED)
 
         # Intercept ALL logging - this must be aggressive
         logging.basicConfig(
@@ -103,9 +119,7 @@ def setup_logging(debug: bool = True) -> None:
 
         # Mark as initialized for this session
         st.session_state.logging_initialized = True
-        logger.info(
-            "Centralized logging setup complete - all logs route through Loguru"
-        )
+        logger.info(LOG_SETUP_COMPLETE)
 
     except Exception as e:
         # Fallback - don't break app if logging fails

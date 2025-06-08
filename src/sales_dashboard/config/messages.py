@@ -48,6 +48,21 @@ ERROR_OPERATION_FAILED: Final[str] = "❌ Operation failed. Please try again."
 ERROR_APP_INITIALIZATION: Final[str] = (
     "❌ **Gagal menginisialisasi aplikasi**\n\nSilakan hubungi administrator atau restart aplikasi."
 )
+ERROR_BCRYPT_NOT_AVAILABLE: Final[str] = "bcrypt not available"
+ERROR_LOGGING_SETUP_FAILED: Final[str] = "Logging setup failed: {error}"
+
+# Logging status messages
+LOG_DEBUG_ENABLED: Final[str] = "Debug logging enabled (console output via Loguru)"
+LOG_PRODUCTION_ENABLED: Final[str] = (
+    "Production logging enabled (file output via Loguru)"
+)
+LOG_SETUP_COMPLETE: Final[str] = (
+    "Centralized logging setup complete - all logs route through Loguru"
+)
+LOG_ALREADY_INITIALIZED: Final[str] = (
+    "Logging already initialized this session - skipping"
+)
+LOG_STARTING_INITIALIZATION: Final[str] = "Starting logging initialization..."
 
 # =============================================================================
 # ✅ SUCCESS MESSAGES

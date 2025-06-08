@@ -68,17 +68,21 @@ def main() -> None:
         # Create navigation based on user type
         if user.is_admin:
             # Admin navigation with all sections
-            pg = st.navigation({
-                "Account": account_pages + [logout_page],
-                "Reports": report_pages,
-                "Administration": admin_pages,
-            })
+            pg = st.navigation(
+                {
+                    "Account": account_pages + [logout_page],
+                    "Reports": report_pages,
+                    "Administration": admin_pages,
+                }
+            )
         else:
             # Regular user navigation
-            pg = st.navigation({
-                "Account": account_pages + [logout_page],
-                "Reports": report_pages,
-            })
+            pg = st.navigation(
+                {
+                    "Account": account_pages + [logout_page],
+                    "Reports": report_pages,
+                }
+            )
 
     pg.run()
 
